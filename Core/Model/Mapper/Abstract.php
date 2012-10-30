@@ -255,10 +255,116 @@ abstract class Core_Model_Mapper_Abstract
 		return $entity;
 	}
 	
-	public function saveCollection($collection){}	
-	public function save($entity){}
-	public function deleteCollection(){}
-	public function delete(){}
+	/**
+	 * Save all collection entities
+	 * 
+	 * @param  Core_Model_Collection_Abstract $collection
+	 * @throws Exception
+	 * @return Core_Model_Mapper_Abstract
+	 */
+	public function saveCollection(Core_Model_Collection_Abstract $collection)
+	{
+		try {
+			$this->getSource()->beginTransanction();
+			
+			$collection->each(function($value, $key) use ($this) {
+				$this->save($value);
+			});
+			
+			$this->getSource()->commit();
+		} catch (Exception $e) {
+			$this->getSource()->rollback();
+			throw $e;
+		}
+		
+		return $this;
+	}
+	
+	/**
+	 * Preprocess save entity
+	 * 
+	 * @param Core_Model_Entity_Abstract $entity
+	 */
+	protected function _beforeSave(Core_Model_Entity_Abstract $entity){}
+	
+	/**
+	 * Save entity
+	 * 
+	 * @param Core_Model_Entity_Abstract $entity
+	 */
+	public function save(Core_Model_Entity_Abstract $entity)
+	{
+		$this->_beforeSave($entity);
+		
+		$pk = $this->getSource()->getPrimaryName();
+		if ($entity->{$pk}) {
+			$this->getSource()->save($entity->toArray());
+		} else {
+			$id = $this->getSource()->insert($entity->toArray());
+			$entity->{$pk} = $id;
+		}
+		
+		$this->_afterSave($entity);
+		return $this;
+	}
+	
+	/**
+	 * Postprocess save entity
+	 * 
+	 * @param Core_Model_Entity_Abstract $entity
+	 */
+	protected function _afterSave(Core_Model_Entity_Abstract $entity){}
+	
+	/**
+	 * Delete all collection entities
+	 * 
+	 * @param  Core_Model_Collection_Abstract $collection
+	 * @throws Exception
+	 * @return Core_Model_Mapper_Abstract
+	 */
+	public function deleteCollection(Core_Model_Collection_Abstract $collection)
+	{
+		try {
+			$this->getSource()->beginTransanction();
+				
+			$collection->each(function($value, $key) use ($this) {
+				$this->delete($value);
+			});
+					
+				$this->getSource()->commit();
+		} catch (Exception $e) {
+			$this->getSource()->rollback();
+			throw $e;
+		}
+		
+		return $this;
+	}
+	
+	/**
+	 * Preprocess delete entity
+	 * 
+	 * @param Core_Model_Entity_Abstract $entity
+	 */
+	protected function _beforeDelete(Core_Model_Entity_Abstract $entity){}
+	
+	/**
+	 * Delete entity
+	 * 
+	 * @param  Core_Model_Entity_Abstract $entity
+	 * @return Core_Model_Mapper_Abstract
+	 */
+	public function delete(Core_Model_Entity_Abstract $entity)
+	{
+		$this->getSource()->delete();
+		return $this;
+	}
+	
+	/**
+	 * Postprocess delete entity
+	 * 
+	 * @param Core_Model_Entity_Abstract $entity
+	 */
+	protected function _afterDelete(Core_Model_Entity_Abstract $entity){}
 	
 	/*public function fetchTree($pColName, $cColName, $pColValue, array $where = null, $order = null, $depth = null)
 	{

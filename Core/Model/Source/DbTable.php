@@ -405,4 +405,10 @@ abstract class Core_Model_Source_DbTable extends Zend_Db_Table_Abstract implemen
 	{
 		
 	}
+	
+	public function insert($data){}
+	
+	public function save($data, $id){}
+	
+	public function delete($id){}
 }

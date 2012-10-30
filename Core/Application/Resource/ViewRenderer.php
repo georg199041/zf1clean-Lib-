@@ -13,7 +13,7 @@ require_once 'Zend/Application/Resource/ResourceAbstract.php';
  * @copyright  Copyright (c) 2012 SunNY Creative Technologies. (http://www.sunny.net)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Core_Application_Resource_ViewRenderer extends Zend_Application_Resource_ResourceAbstract
+class Core_Application_Resource_Viewrenderer extends Zend_Application_Resource_ResourceAbstract
 {
     protected $_helperFile = 'Zend/Controller/Action/Helper/ViewRenderer.php';
 	
