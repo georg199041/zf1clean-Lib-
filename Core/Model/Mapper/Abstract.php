@@ -267,8 +267,8 @@ abstract class Core_Model_Mapper_Abstract
 		try {
 			$this->getSource()->beginTransanction();
 			
-			$collection->each(function($value, $key) use ($this) {
-				$this->save($value);
+			$collection->each(function($value, $key) {
+				$value->save();
 			});
 			
 			$this->getSource()->commit();
@@ -327,11 +327,11 @@ abstract class Core_Model_Mapper_Abstract
 		try {
 			$this->getSource()->beginTransanction();
 				
-			$collection->each(function($value, $key) use ($this) {
-				$this->delete($value);
+			$collection->each(function($value, $key) {
+				$value->delete();
 			});
 					
-				$this->getSource()->commit();
+			$this->getSource()->commit();
 		} catch (Exception $e) {
 			$this->getSource()->rollback();
 			throw $e;

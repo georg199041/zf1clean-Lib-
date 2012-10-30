@@ -204,6 +204,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 			$this->setOptions($options->toArray());
 		}
 		
+		$this->getEngine()->addHelperPath('Core/Block/View/Helper', 'Core_Block_View_Helper');		
 		$this->init();
 	}
 	

@@ -166,7 +166,7 @@ class Core_Block_Toolbar_Widget extends Core_Block_View
 		$buttons = '';		
 		foreach ($this->getButtons() as $button) {
 			$class = preg_replace('/[^\p{L}]/u', '', $button->getName());
-			$buttons .= '<li class="cbtw-button-' . $class . '">' . $button->render() . '</li>';
+			$buttons .= '<li class="cbtw-button cbtw-button-' . $class . '">' . $button->render() . '</li>';
 		}		
 		return '<ul class="cbtw-buttons">' . $buttons . '</ul>';
 	}
@@ -175,7 +175,8 @@ class Core_Block_Toolbar_Widget extends Core_Block_View
 	{
 		$links = '';
 		foreach ($this->getLinks() as $link) {
-			$links .= '<li class="cbtw-link-' . $link->getName() . '">' . $link->render() . '</li>';
+			$class = preg_replace('/[^\p{L}]/u', '', $link->getName());
+			$links .= '<li class="cbtw-link cbtw-link-' . $class . '">' . $link->render() . '</li>';
 		}
 		return '<ul class="cbtw-links">' . $links . '</ul>';
 	}
@@ -184,7 +185,8 @@ class Core_Block_Toolbar_Widget extends Core_Block_View
 	{
 		try {
 			$this->setRendered(true);
-			return '<div class="cbtw-block">'
+			$class = preg_replace('/[^\p{L}\-]/u', '_', $this->getBlockName());
+			return '<div class="cbtw-block cbtw-block-' . $class . '">'
 				 . '<div class="cbtw-title">' . $this->getTitle() . '</div>'
 				 . $this->_renderButtons()
 				 . $this->_renderLinks()

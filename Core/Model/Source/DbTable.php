@@ -44,7 +44,8 @@ abstract class Core_Model_Source_DbTable extends Zend_Db_Table_Abstract implemen
 	{
 		$className = $this->getClassName();
 		$suffix = substr($className, strrpos($className, '_') + 1);
-		$this->_name = $this->getFilter()->filter($suffix);
+		$prefix = substr($className, 0, strpos($className, '_'));
+		$this->_name = $this->getFilter()->filter($prefix) . '_' . $this->getFilter()->filter($suffix);
 		return $this;
 	}
 	

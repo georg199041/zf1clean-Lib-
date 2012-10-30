@@ -71,9 +71,34 @@ class Core_Block_Toolbar_Link extends Core_Attributes
 		return $this->_toolbar;
 	}
 	
-	public function setUrlOptions(array $options)
+	public function setUrlOptions($options)
 	{
-		$this->_urlOptions = $options;
+		if (is_array($options)) {
+			$this->_urlOptions = $options;
+		} else if (is_string($options)) {
+			list($module, $controller, $action, $params) = explode('/', trim($options, '/'), 4);
+			if (null !== $module) {
+				$this->_urlOptions['module'] = $module;
+				if (null !== $controller) {
+					$this->_urlOptions['controller'] = $controller;
+					if (null !== $action) {
+						$this->_urlOptions['action'] = $action;
+						if (null !== $params) {
+							$i = 1;
+							$params = explode('/', $params);
+							foreach ($params as $val) {
+								if (!($i % 2)) {
+									$this->_urlOptions[$params[$i - 2]] = $val;
+								}
+								
+								$i++;
+							}
+						}
+					}
+				}
+			}
+		}
+		
 		return $this;
 	}
 	

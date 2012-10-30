@@ -6,11 +6,17 @@ require_once "Core/Attributes.php";
 
 class Core_Block_Grid_Column_Default extends Core_Attributes
 {
+	protected $_colAttribsNames = array('span', 'width');
+	
+	protected $_thAttribsNames = array('align', 'width');
+	
 	protected $_grid;
 	
 	protected $_row;
 	
-	protected $_attribs = array();
+	protected $_colAttribs = array();
+	
+	protected $_thAttribs = array();
 	
 	protected $_sortable = false;
 	
@@ -47,6 +53,10 @@ class Core_Block_Grid_Column_Default extends Core_Attributes
 			$method = 'set' . ucfirst($name);
 			if (method_exists($this, $method)) {
 				$this->$method($value);
+			} else if (in_array($name, $this->_colAttribsNames)) {
+				$this->_colAttribs[$name] = $value;
+			} else if ('th-' == substr($name, 0, 3) && in_array(substr($name, 3), $this->_thAttribsNames)) {
+				$this->_thAttribs[substr($name, 3)] = $value;
 			} else {
 				$this->addAttribute($name, $value);
 			}
@@ -204,6 +214,24 @@ class Core_Block_Grid_Column_Default extends Core_Attributes
 	public function getFilterableOptions()
 	{
 		return $this->_filterableOptions;
+	}
+	
+	public function renderColAttribs()
+	{
+		$str = '';
+		foreach ($this->_colAttribs as $name => $value) {
+			$str .= ' ' . $name . '="' . $value . '"';
+		}
+		return $str;
+	}
+
+	public function renderThAttribs()
+	{
+		$str = '';
+		foreach ($this->_thAttribs as $name => $value) {
+			$str .= ' ' . $name . '="' . $value . '"';
+		}
+		return $str;
 	}
 	
 	public function render()

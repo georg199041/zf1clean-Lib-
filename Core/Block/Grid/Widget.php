@@ -56,9 +56,6 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		$this->_messages[$name] = $message;
 		return $this;
 	}
-	
-	public function init()
-	{}
 
 	public function setName($name)
 	{
@@ -228,6 +225,17 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		return $this->_routeName;
 	}
 	
+	protected function _renderColAttribs()
+	{
+		$xhtml = '';
+		
+		foreach ($this->getColumns() as $column) {
+			$xhtml .= '<col ' . $column->renderColAttribs() . '>';
+		}
+		
+		return $xhtml;
+	}
+	
 	protected function _renderThead()
 	{
 		$request = Zend_Controller_Front::getInstance()->getRequest();
@@ -268,7 +276,7 @@ class Core_Block_Grid_Widget extends Core_Block_View
 				       . '</span></a>';
 			}
 			
-			$xhtml .= '<th class="cbgw-header-' . $column->getName() . '">' . $title . '</th>';
+			$xhtml .= '<th class="cbgw-header-' . $column->getName() . '" ' . $column->renderThAttribs() . '>' . $title . '</th>';
 		}
 		
 		if ($hasFilters) {
@@ -337,7 +345,9 @@ class Core_Block_Grid_Widget extends Core_Block_View
 	public function render($name = null)
 	{
 		try {
-			$xhtml = '<div class="cbgw-block"><table ' . $this->toHtmlAttributes() . '>'
+			$class = preg_replace('/[^\p{L}\-]/u', '_', $this->getBlockName());
+			$xhtml = '<div class="cbgw-block cbgw-block-' . $class . '"><table ' . $this->toHtmlAttributes() . '>'
+				   . $this->_renderColAttribs()
 			       . $this->_renderThead()
 			       . $this->_renderTbody()
 			       . $this->_renderTfoot()
