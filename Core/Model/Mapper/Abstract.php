@@ -321,7 +321,7 @@ abstract class Core_Model_Mapper_Abstract
 	 * @param  Core_Model_Collection_Abstract $collection
 	 * @throws Exception
 	 * @return Core_Model_Mapper_Abstract
-	 */
+	 */		
 	public function deleteCollection(Core_Model_Collection_Abstract $collection)
 	{
 		try {

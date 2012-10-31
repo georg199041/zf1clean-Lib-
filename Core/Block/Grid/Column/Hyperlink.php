@@ -80,9 +80,34 @@ class Core_Block_Grid_Column_Hyperlink extends Core_Block_Grid_Column_Default
 		return $this->_linkBindFields;
 	}
 	
-	public function setLinkOptions(array $value)
+	public function setLinkOptions($value)
 	{
-		$this->_linkOptions = $value;
+		if (is_array($value)) {
+			$this->_linkOptions = $value;
+		} else if (is_string($value)) {
+			list($module, $controller, $action, $params) = explode('/', trim($value, '/'), 4);
+			if (null !== $module) {
+				$this->_linkOptions['module'] = $module;
+				if (null !== $controller) {
+					$this->_linkOptions['controller'] = $controller;
+					if (null !== $action) {
+						$this->_linkOptions['action'] = $action;
+						if (null !== $params) {
+							$i = 1;
+							$params = explode('/', $params);
+							foreach ($params as $val) {
+								if (!($i % 2)) {
+									$this->_linkOptions[$params[$i - 2]] = $val;
+								}
+			
+								$i++;
+							}
+						}
+					}
+				}
+			}
+		}
+		
 		return $this;
 	}
 	
@@ -143,8 +168,6 @@ class Core_Block_Grid_Column_Hyperlink extends Core_Block_Grid_Column_Default
 			$text = $this->getValue();
 		}
 		
-		$this->addAttrib('target', $this->getLinkTarget());
-		$this->addAttrib('href', $url);
-		return '<a ' . $this->_renderAttribs() . '><span>' . $text . '</span></a>';
+		return '<a href="' . $url . '" target="' . $this->getLinkTarget() . '"><span>' . $text . '</span></a>';
 	}
 }

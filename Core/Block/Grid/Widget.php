@@ -150,14 +150,13 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		} else if (is_array($element)) {
 			if (!isset($element['type'])) {
 				$element['type'] = 'default';
-				//throw new Exception("Column options must have type");
 			}
 			
 			$className = ucfirst(Zend_Filter::filterStatic($element['type'], 'Word_DashToCamelCase'));
 			if (false === stripos($className, '_')) {
 				$className = 'Core_Block_Grid_Column_' . $className;
 			}
-					
+			
 			if (!@class_exists($className, true)) {
 				throw new Exception("Column class '$className' not found");
 			}
@@ -242,6 +241,7 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		
 		$xhtml = '';
 		$hasFilters = false;
+		$j = 0;
 		foreach ($this->getColumns() as $column) {
 			if ($column->isFilterable()) {
 				$hasFilters = true;
@@ -276,7 +276,15 @@ class Core_Block_Grid_Widget extends Core_Block_View
 				       . '</span></a>';
 			}
 			
-			$xhtml .= '<th class="cbgw-header-' . $column->getName() . '" ' . $column->renderThAttribs() . '>' . $title . '</th>';
+			$position = '';
+			if ($j == 0) {
+				$position = 'cbgw-columnfirst';
+			} else if ($j == count($this->getColumns()) - 1) {
+				$position = 'cbgw-columnlast';
+			}
+				
+			$xhtml .= '<th class="cbgw-header ' . $position . ' cbgw-header-' . $column->getName() . '" ' . $column->renderThAttribs() . '>' . $title . '</th>';
+			$j++;
 		}
 		
 		if ($hasFilters) {
@@ -315,13 +323,20 @@ class Core_Block_Grid_Widget extends Core_Block_View
 			$i = 0;
 			foreach ($this->getData() as $row) {
 				$xhtml .= '<tr class="' . (!($i % 2) ? 'odd' : 'even') . '">';
+				$j = 0;
 				foreach ($this->getColumns() as $name => $column) {
-					$column->setAttribute('class', "cbgw-column-{$column->getName()}");
-					//var_dump($row['title']);
+					$position = '';
+					if ($j == 0) {
+						$position = 'cbgw-columnfirst';
+					} else if ($j == count($this->getColumns()) - 1) {
+						$position = 'cbgw-columnlast';
+					}
+					
+					$column->setAttribute('class', "cbgw-column {$position} cbgw-column-{$column->getName()}");
 					$column->setRow($row);
-					//$column->setValue($row[$name]);
 					$attribs = $column->toHtmlAttributes();
 					$xhtml .= "<td {$attribs}>{$column->render()}</td>";
+					$j++;
 				}
 				$xhtml .= '</tr>';
 				$i++;
