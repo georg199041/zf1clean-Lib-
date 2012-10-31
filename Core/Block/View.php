@@ -135,7 +135,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 * 
 	 * @return string
 	 */
-	public function _getBlockClassName()
+	protected function _getBlockClassName()
 	{
 		$name = $this->getScriptName();
 		if (null === $name) {
@@ -154,17 +154,41 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 		$class = $filter->filter($class);
 		$class = ucwords($class);
 		$class = str_ireplace(' ', '_', $class);
-		$className = $filter->filter($module) . '_Block_' . $class;
+		echo $className = $filter->filter($module) . '_Block_' . $class;
 		
 		if (@class_exists($className, true)) {
-			return $className;
+			
+			//return $className;
 		}
 		
 		// Search in layouts
-		$className = 'Application_Block_' . $class;
+		echo $className = 'Application_Block_' . $class;
 		if (@class_exists($className, true)) {
-			return $className;
+			//return $className;
 		}
+	}
+	
+	/**
+	 * Get block name variants for loader
+	 * 
+	 * @throws Exception
+	 * @return array
+	 */
+	protected function _getBlockNames()
+	{
+		$name = $this->getScriptName();
+		if (null === $name) {
+			throw new Exception("Script name not defined");
+		}
+		
+		require_once 'Zend/Controller/Action/HelperBroker.php';
+		$viewSuffix = Zend_Controller_Action_HelperBroker::getStaticHelper('viewRenderer')->getViewSuffix();
+		$name = str_ireplace(".$viewSuffix", '', $name);
+		
+		require_once 'Zend/Controller/Front.php';
+		$module = Zend_Controller_Front::getInstance()->getRequest()->getModuleName();
+		
+		return array($module . '/' . $name, 'application/' . $name);;
 	}
 	
 	/**
@@ -695,7 +719,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
     public function render($name = null)
     {
     	if ($this->isRendered()) {
-    		return ''; // TODO
+    		return '';
     	}
     	
     	if (null !== $name) {
@@ -703,11 +727,13 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
     	}
     	
     	if (get_class($this) == 'Core_Block_View') {
-    		$className = $this->_getBlockClassName();
-    		if (@class_exists($className, true)) {
-    			$block = new $className();
-    			$block->setScriptName($this->getScriptName());
-    			return $block->render();
+    		$names = $this->_getBlockNames();
+    		foreach ($names as $blockName) {
+	    		try {
+	    			$block = Core::getBlock($blockName);
+	    			$block->setScriptName($this->getScriptName());
+	    			return $block->render();
+	    		} catch (Exception $e) {}
     		}
     	}
     	
@@ -723,7 +749,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
     		include $file;
     		$script = ob_get_clean();
     		
-    		$this->setRendered(true); // TODO
+    		$this->setRendered(true);
     		$response .= $this->_renderHighliter($file) . $script;
     	} catch (Exception $e) {
     		if (count($this->getBlockChilds()) == 0) {

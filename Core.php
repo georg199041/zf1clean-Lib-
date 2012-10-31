@@ -2,128 +2,177 @@
 
 class Core
 {
-	protected static $_instance;
+	/**
+	 * Objects container
+	 * 
+	 * @var array
+	 */
+	protected static $_objects = array();
 	
-	protected $_objects = array();
-	
-	protected $_inflector;
-	
-	protected $_specRules = array(
-		':namespace' => 'Word_DashToCamelCase',
-		':name'      => 'Word_DashToCamelCase'
-	);
-	
-	protected $_specList = array(
-		'mapper' => ':namespace_Model_Mapper_:name',
-		'form' => ':namespace_Form_:name'
-	);
-	
-	protected function __construct(array $options = null)
+	/**
+	 * Autoload class
+	 * 
+	 * @param  string $className
+	 * @param  boolean $singleton
+	 * @throws Exception
+	 * @return object
+	 */
+	public static function getClass($className, $singleton = true)
 	{
-		if (is_array($options)) {
-			//$this->setOptions($options);
-		}
-	}
-	
-	public static function getInstance(array $options = null)
-	{
-		if (null === self::$_instance) {
-			self::$_instance = new self($options);
+		if (!@class_exists($className, true)) {
+			throw new Exception("Class '{$className}' not found");
 		}
 		
-		return self::$_instance;
-	}
-	
-	public function getInflector($spec)
-	{
-		if (null === $this->_inflector) {
-			$this->_inflector = new Zend_Filter_Inflector();
-			$this->_inflector->setRules($this->_specRules);
+		if ($singleton && array_key_exists($className, self::$_objects)) {
+			return self::$_objects[$className];
 		}
 		
-		if (!array_key_exists($spec, $this->_specList)) {
-			throw new Exception("Spec for key '$spec' not found");
+		$class = new $className();
+		if ($singleton) {
+			self::$_objects[$className] = $class;
+			return self::$_objects[$className];
 		}
 		
-		$this->_inflector->setTarget($this->_specList[$spec]);
-		return $this->_inflector;
-	}
-	
-	public function getClass($className, $singleton = true)
-	{
-		if (array_key_exists($className, $this->_objects)) {
-			return $this->_objects[$className];
-		}
-		
-		if (@class_exists($className, true)) {
-			$class = new $className();
-			if (!$singleton) {
-				return $class;
-			}
-				
-			$this->_objects[$className] = $class;
-			return $this->_objects[$className];
-		}
-		
-		throw new Exception("Class '$className' not found");
-	}
-	
-	public function getMapper($spec, $singleton = true)
-	{
-		if (!preg_match('/^([a-z\-])+\/([a-z\-])+$/i', $spec)) {
-			throw new Exception("Invalid name format '$spec'");
-		}
-		
-		list($s['namespace'], $s['name']) = explode('/', $spec);
-		$className = $this->getInflector('mapper')->filter($s);
-		
-		return $this->getClass($className, $singleton);
-	}
-	
-	public function getForm($spec, $singleton = true)
-	{
-		if (!preg_match('/^([a-z\-])+\/([a-z\-])+$/i', $spec)) {
-			throw new Exception("Invalid name format '$spec'");
-		}
-		
-		list($s['namespace'], $s['name']) = explode('/', $spec);
-		$className = $this->getInflector('form')->filter($s);
-		
-		return $this->getClass($className, $singleton);
+		return $class;
 	}
 	
 	/**
-	 * Filter value
-	 * If not exists filter try to load and save in registry
+	 * Autoload filter class
+	 * 
+	 * @param  string $className
+	 */
+	public static function getFilter($className, $singleton = true)
+	{
+		return self::getClass($className, $singleton);
+	}
+	
+	/**
+	 * Filter value with specified filter class
 	 * 
 	 * @param  mixed $value
-	 * @param  string|object $filterClass
-	 * @throws Exception
+	 * @param  string $filterClass
+	 * @return mixed
 	 */
-	public function filter($value, $filterClass)
+	public static function useFilter($value, $filterClass)
 	{
-		if (is_string($filterClass)) {
-			if (!isset($this->_objects[$filterClass])) {
-				require_once str_ireplace('_', '/', $filterClass) . '.php';
-				$class = new $filterClass();
-				if (!($class instanceof Zend_Filter_Interface)) {
-					throw new Exception("Filter {$filterClass} must implements Zend_Filter_Interface");
-				}
-			} else {
-				$class = $this->_objects[$filterClass];
-			}
-		} else {
-			if (!($filterClass instanceof Zend_Filter_Interface)) {
-				throw new Exception("Filter " . get_class($filterClass) . " must implements Zend_Filter_Interface");
-			}
+		return self::getFilter($filterClass)->filter($value);
+	}
+	
+	/**
+	 * Format block class name from name rule
+	 * 
+	 * @param  string $name
+	 * @return string
+	 */
+	public static function getBlockClassName($name)
+	{
+		$parts = explode('/', $name);
+		foreach ($parts as &$p) {
+			$p = self::useFilter($p, 'Zend_Filter_Word_DashToCamelCase');
+		}
+		
+		$namespace = $parts[0];
+		$parts[0] = 'Block';
+		array_unshift($parts, $namespace);
+		
+		return implode('_', $parts);
+	}
+	
+	/**
+	 * Autoload block
+	 * 
+	 * @param  string $name
+	 * @return object
+	 */
+	public static function getBlock($name, $singleton = true)
+	{
+		$className = self::getBlockClassName($name);
+		return self::getClass($className, $singleton);
+	}
+	
+	/**
+	 * Format mapper name
+	 * 
+	 * @param  string $name
+	 * @return string
+	 */
+	public static function getMapperClassName($name)
+	{
+		$parts = explode('/', $name);
+		foreach ($parts as &$p) {
+			$p = self::useFilter($p, 'Zend_Filter_Word_DashToCamelCase');
+		}
+		
+		$namespace = $parts[0];
+		$parts[0] = 'Model_Mapper';
+		array_unshift($parts, $namespace);
+		
+		return implode('_', $parts);
+	}
+	
+	/**
+	 * Autoload mapper
+	 * 
+	 * @param  string $name
+	 * @return object
+	 */
+	public static function getMapper($name, $singleton = true)
+	{
+		$className = self::getMapperClassName($name);
+		return self::getClass($className, $singleton);
+	}
+	
+	/**
+	 * Parse url like as in default route use to options array 
+	 * 
+	 * @param unknown_type $url
+	 */
+	public static function urlToOptions($url)
+	{
+		$options = array();
+		$front = Zend_Controller_Front::getInstance();
+		
+		if (false !== strpos($url, '?')) {
+			$url = substr($url, 0, strpos($url, '?'));
+		}
+		
+		list($module, $controller, $action, $params) = explode('/', $url, 4);
+		
+		if (null !== $module) {
+			$options['module'] = ($module != '*') ? $module : $front->getRequest()->getModuleName();
+		}
 			
-			$class = $filterClass;
+		if (null !== $controller) {
+			$options['controller'] = ($controller != '*') ? $controller : $front->getRequest()->getControllerName();
+		}
+			
+		if (null !== $action) {
+			$options['action'] = ($action != '*') ? $action : $front->getRequest()->getActionName();
+		}
+				
+		if (null !== $params) {
+			$parts = explode('/', $params);
+			$i = 1;
+			foreach ($parts as $p) {
+				if (!($i % 2)) {
+					$options[$parts[$i - 2]] = $p;
+				}
+			
+				$i++;
+			}
 		}
 		
-		if (!isset($this->_objects[$filterClass])) {
-			$this->_objects[$filterClass] = $class;
-		}
-		
-		return $class->filter($value);
+		return $options;
+	}
+	
+	/**
+	 * Global session getter
+	 * 
+	 * @param  string $namespace
+	 * @return Zend_Session_Namespace|NULL
+	 */
+	public static function getSession($namespace)
+	{
+		return new Zend_Session_Namespace($namespace);
 	}
 }

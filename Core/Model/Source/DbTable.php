@@ -369,8 +369,8 @@ abstract class Core_Model_Source_DbTable extends Zend_Db_Table_Abstract implemen
 		}
 		
 		$select = $this->createSelect();
-		$select->where($this->_db->quoteIdentifier($this->getPrimaryName()) . ' = ?', $id);
-		$rowset = $this-_fetch($select);
+		$select->where($this->getAdapter()->quoteIdentifier($this->getPrimaryName()) . ' = ?', $id);
+		$rowset = $this->_fetch($select);
 		
 		if (count($rowset) == 0) {
 			return null;
@@ -399,7 +399,9 @@ abstract class Core_Model_Source_DbTable extends Zend_Db_Table_Abstract implemen
 	
 	public function find($id)
 	{
-		
+		return $this->fetchRow(array(
+			$this->getAdapter()->quoteIdentifier($this->getPrimaryName()) . ' = ?' => $id
+		));
 	}
 	
 	public function findCollection(array $idArray)
@@ -408,8 +410,6 @@ abstract class Core_Model_Source_DbTable extends Zend_Db_Table_Abstract implemen
 	}
 	
 	public function insert($data){}
-	
-	public function save($data, $id){}
 	
 	public function delete($id){}
 }

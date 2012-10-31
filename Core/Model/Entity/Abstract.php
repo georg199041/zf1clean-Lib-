@@ -33,7 +33,7 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 */
 	protected function _set($key, $val)
 	{
-		$key = Core::getInstance()->filter($key, 'Zend_Filter_Word_CamelCaseToUnderscore');
+		$key = Core::useFilter($key, 'Zend_Filter_Word_CamelCaseToUnderscore');
 		$this->_data[strtolower($key)] = $val;
 		return $this;
 	}
@@ -46,7 +46,7 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 */
 	protected function _get($key)
 	{
-		$key = Core::getInstance()->filter($key, 'Zend_Filter_Word_CamelCaseToUnderscore');
+		$key = Core::useFilter($key, 'Zend_Filter_Word_CamelCaseToUnderscore');
 		return $this->_data[strtolower($key)];
 	}
 	
@@ -58,7 +58,7 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 */
 	protected function _has($key)
 	{
-		$key = Core::getInstance()->filter($key, 'Zend_Filter_Word_CamelCaseToUnderscore');
+		$key = Core::useFilter($key, 'Zend_Filter_Word_CamelCaseToUnderscore');
 		return isset($this->_data[strtolower($key)]);
 	}
 	
@@ -70,7 +70,7 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 */
 	protected function _del($key)
 	{
-		$key = Core::getInstance()->filter($key, 'Zend_Filter_Word_CamelCaseToUnderscore');
+		$key = Core::useFilter($key, 'Zend_Filter_Word_CamelCaseToUnderscore');
 		$this->_data[strtolower($key)] = null;
 		unset($this->_data[strtolower($key)]);
 		return $this;
@@ -207,7 +207,7 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 */
 	public function offsetExists($offset)
 	{
-		$method = 'has' . Core::getInstance()->filter($offset, 'Zend_Filter_Word_UnderscoreToCamelCase');
+		$method = 'has' . Core::useFilter($offset, 'Zend_Filter_Word_UnderscoreToCamelCase');
 		return $this->$method();
 	}
 	
@@ -219,7 +219,7 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 */
 	public function __isset($offset)
 	{
-		$method = 'has' . Core::getInstance()->filter($offset, 'Zend_Filter_Word_UnderscoreToCamelCase');
+		$method = 'has' . Core::useFilter($offset, 'Zend_Filter_Word_UnderscoreToCamelCase');
 		return $this->$method();
 	}
 	
@@ -234,7 +234,7 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 */
 	public function offsetGet($offset)
 	{
-		$method = 'get' . Core::getInstance()->filter($offset, 'Zend_Filter_Word_UnderscoreToCamelCase');
+		$method = 'get' . Core::useFilter($offset, 'Zend_Filter_Word_UnderscoreToCamelCase');
 		return $this->$method();
 	}
 	
@@ -246,7 +246,7 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 */
 	public function __get($offset)
 	{
-		$method = 'get' . Core::getInstance()->filter($offset, 'Zend_Filter_Word_UnderscoreToCamelCase');
+		$method = 'get' . Core::useFilter($offset, 'Zend_Filter_Word_UnderscoreToCamelCase');
 		return $this->$method();
 	}
 	
@@ -259,7 +259,7 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 */
 	public function offsetSet($offset, $value)
 	{
-		$method = 'set' . Core::getInstance()->filter($offset, 'Zend_Filter_Word_UnderscoreToCamelCase');
+		$method = 'set' . Core::useFilter($offset, 'Zend_Filter_Word_UnderscoreToCamelCase');
 		$this->$method($value);
 	}
 	
@@ -271,7 +271,7 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 */
 	public function __set($offset, $value)
 	{
-		$method = 'set' . Core::getInstance()->filter($offset, 'Zend_Filter_Word_UnderscoreToCamelCase');
+		$method = 'set' . Core::useFilter($offset, 'Zend_Filter_Word_UnderscoreToCamelCase');
 		$this->$method($value);
 	}
 	
@@ -284,7 +284,7 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 */
 	public function offsetUnset($offset)
 	{
-		$method = 'del' . Core::getInstance()->filter($offset, 'Zend_Filter_Word_UnderscoreToCamelCase');
+		$method = 'del' . Core::useFilter($offset, 'Zend_Filter_Word_UnderscoreToCamelCase');
 		$this->$method();
 	}
 	
@@ -295,7 +295,7 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 */
 	public function __unset($offset)
 	{
-		$method = 'del' . Core::getInstance()->filter($offset, 'Zend_Filter_Word_UnderscoreToCamelCase');
+		$method = 'del' . Core::useFilter($offset, 'Zend_Filter_Word_UnderscoreToCamelCase');
 		$this->$method();
 	}
 }

@@ -298,7 +298,7 @@ abstract class Core_Model_Mapper_Abstract
 		
 		$pk = $this->getSource()->getPrimaryName();
 		if ($entity->{$pk}) {
-			$this->getSource()->save($entity->toArray());
+			$this->getSource()->update($entity->toArray(), array($pk . ' = ?' => $entity->{$pk}));
 		} else {
 			$id = $this->getSource()->insert($entity->toArray());
 			$entity->{$pk} = $id;
@@ -396,7 +396,7 @@ abstract class Core_Model_Mapper_Abstract
 	 */
 	public function find($id)
 	{
-		$entity->create();
+		$entity = $this->create();
 		$this->_beforeFind($entity);
 		
 		$row = $this->getSource()->find($id);

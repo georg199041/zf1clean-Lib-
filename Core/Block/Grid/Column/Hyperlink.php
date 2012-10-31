@@ -85,27 +85,7 @@ class Core_Block_Grid_Column_Hyperlink extends Core_Block_Grid_Column_Default
 		if (is_array($value)) {
 			$this->_linkOptions = $value;
 		} else if (is_string($value)) {
-			list($module, $controller, $action, $params) = explode('/', trim($value, '/'), 4);
-			if (null !== $module) {
-				$this->_linkOptions['module'] = $module;
-				if (null !== $controller) {
-					$this->_linkOptions['controller'] = $controller;
-					if (null !== $action) {
-						$this->_linkOptions['action'] = $action;
-						if (null !== $params) {
-							$i = 1;
-							$params = explode('/', $params);
-							foreach ($params as $val) {
-								if (!($i % 2)) {
-									$this->_linkOptions[$params[$i - 2]] = $val;
-								}
-			
-								$i++;
-							}
-						}
-					}
-				}
-			}
+			$this->_linkOptions = Core::urlToOptions($value);
 		}
 		
 		return $this;
