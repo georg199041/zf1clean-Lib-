@@ -47,7 +47,7 @@ class Core_Block_Grid_Column_Checkbox extends Core_Block_Grid_Column_Default
 	public function render()
 	{
 		$name = $this->getName() . '[' . $this->getRow($this->getGrid()->getIdColumnName()) . ']';
-		return $this->getGrid()->formCheckbox($name, $this->getValue(), $this->getAttribs(), array(
+		return $this->getGrid()->formCheckbox($name, $this->getValue(), null, array(
 			'checkedValue'   => $this->getCheckedValue(),
 			'uncheckedValue' => $this->getUncheckedValue()
 		));

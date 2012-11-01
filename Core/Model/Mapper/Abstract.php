@@ -355,7 +355,12 @@ abstract class Core_Model_Mapper_Abstract
 	 */
 	public function delete(Core_Model_Entity_Abstract $entity)
 	{
-		$this->getSource()->delete();
+		$this->_beforeDelete($entity);
+		
+		$pk = $this->getSource()->getPrimaryName();
+		$this->getSource()->delete(array($pk . ' = ?' => $entity->{$pk}));
+		
+		$this->_afterDelete($entity);
 		return $this;
 	}
 	
@@ -399,7 +404,7 @@ abstract class Core_Model_Mapper_Abstract
 		$entity = $this->create();
 		$this->_beforeFind($entity);
 		
-		$row = $this->getSource()->find($id);
+		$row = $this->getSource()->find((int) $id);
 		if ($row) {
 			$entity->fill($row);
 			$this->_afterFind($entity);
