@@ -129,10 +129,17 @@ class Core_Block_Form_Widget extends Core_Block_View
 	 */
 	public function render($name = null)
 	{
+   		$response = '';
+   		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);
+		
 		try {
-			return $this->getForm()->render();
+			$response .= $this->getForm()->render();
+			//$this->setRendered(true);
 		} catch (Exception $e) {
-			return $e->getMessage();
+			$response .= $e->getMessage();
 		}
+    	
+		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_AFTER);
+    	return $response;
 	}
 }

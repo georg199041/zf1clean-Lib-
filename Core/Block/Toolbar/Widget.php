@@ -183,16 +183,23 @@ class Core_Block_Toolbar_Widget extends Core_Block_View
 	
 	public function render($name = null)
 	{
+   		$response = '';
+   		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);
+		
 		try {
 			$this->setRendered(true);
 			$class = preg_replace('/[^\p{L}\-]/u', '_', $this->getBlockName());
-			return '<div class="cbtw-block cbtw-block-' . $class . '">'
+			$response .= '<div class="cbtw-block cbtw-block-' . $class . '">'
 				 . '<div class="cbtw-title">' . $this->getTitle() . '</div>'
 				 . $this->_renderButtons()
 				 . $this->_renderLinks()
 			     . '</div>';
+			//$this->setRendered(true);
 		} catch (Exception $e) {
-			return $e->getMessage();
+			$response .= $e->getMessage();
 		}
+    	
+		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_AFTER);
+    	return $response;
 	}
 }

@@ -114,29 +114,6 @@ class Core_Block_Grid_Widget extends Core_Block_View
 				
 				$this->addColumn($colOptions);
 			}
-			
-			/*$name = null;
-			if (!is_numeric($key)) {
-				$name = $key;
-			}
-			
-			if ($colOptions instanceof Core_Block_Grid_Column_Default) {
-				if (null !== $name) {
-					$name = $colOptions->getName();
-				}
-				
-				$this->addColumn($element, $name);
-			} else if (is_array($colOptions)) {
-				$className = $colOptions['type'];
-				if (null === $name) {
-					$name = $colOptions['name'];
-				}
-				
-				if (null !== $className && null !== $name) {
-					unset($colOptions['type'], $colOptions['name']);
-					$this->addColumn($className, $name, $colOptions);
-				}
-			}*/
 		}
 		
 		return $this;
@@ -359,19 +336,23 @@ class Core_Block_Grid_Widget extends Core_Block_View
 	
 	public function render($name = null)
 	{
+   		$response = '';
+   		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);
+		
 		try {
 			$class = preg_replace('/[^\p{L}\-]/u', '_', $this->getBlockName());
-			$xhtml = '<div class="cbgw-block cbgw-block-' . $class . '"><table ' . $this->toHtmlAttributes() . '>'
+			$response .= '<div class="cbgw-block cbgw-block-' . $class . '"><table ' . $this->toHtmlAttributes() . '>'
 				   . $this->_renderColAttribs()
 			       . $this->_renderThead()
 			       . $this->_renderTbody()
 			       . $this->_renderTfoot()
 			       . '</table></div>';
+			//$this->setRendered(true);
 		} catch (Exception $e) {
-			$xhtml = $e->getMessage();
+			$response .= $e->getMessage();
 		}
 		
-		//$this->setRendered(true);
-		return $xhtml;
+		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_AFTER);
+    	return $response;
 	}
 }

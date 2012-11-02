@@ -1,4 +1,5 @@
 <?php
+// TODO: REFACTOR BLOCK TO USE PLACEMENT FLAG
 
 require_once "Zend/View/Interface.php";
 
@@ -18,6 +19,10 @@ require_once "Core/Attributes.php";
  */
 class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 {
+	const BLOCK_PLACEMENT_BEFORE = 'before';
+	
+	const BLOCK_PLACEMENT_AFTER = 'after';
+	
 	/**
 	 * Global engine object
 	 * 
@@ -46,6 +51,11 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 */
 	protected $_rendered = false;
 	
+	/**
+	 * Request object
+	 * 
+	 * @var Zend_Controller_Request_Abstract
+	 */
 	protected $_request;
 	
 	/**
@@ -215,6 +225,31 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 		return '';
 	}
 	
+	protected function _renderBlocks($placement = self::BLOCK_PLACEMENT_AFTER)
+	{
+		$response = '';
+		foreach ($this->getBlockChilds($placement) as $child) {
+			$response .= $child->render();
+		}
+		
+		return $response;
+	}
+	
+	protected function _renderBlocksToLayout()
+	{
+		$layout = Zend_Layout::startMvc();
+		$placements = $this->getBlockChilds(null);
+		foreach ($placements as $placement => $blocks) {
+			if ($placement == self::BLOCK_PLACEMENT_AFTER || $placement == self::BLOCK_PLACEMENT_BEFORE) {
+				continue;
+			}
+			
+			foreach ($blocks as $child) {
+				$layout->{$placement} .= $child->render();
+			}
+		}
+	}
+	
 	/**
 	 * Constructor
 	 * 
@@ -297,7 +332,14 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	public function getBlockName()
 	{
 		if (null === $this->_blockName) {
+			$parts = explode('_', get_class($this));
+			unset($parts[1]);
+			foreach ($parts as &$p) {
+				$p = Core::useFilter($p, 'Zend_Filter_Word_CamelCaseToDash');
+				$p = strtolower($p);
+			}
 			
+			$this->setBlockName(implode('/', $parts));
 		}
 		
 		return $this->_blockName;
@@ -331,10 +373,10 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 * @param  array $childs
 	 * @return Core_Block_View
 	 */
-	public function setBlockChilds(array $childs)
+	public function setBlockChilds(array $childs, $placement = self::BLOCK_PLACEMENT_AFTER)
 	{
 		$this->_blockChilds = array();
-		$this->addBlockChilds($childs);
+		$this->addBlockChilds($childs, $placement);
 		return $this;
 	}
 	
@@ -343,8 +385,12 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 * 
 	 * @return array
 	 */
-	public function getBlockChilds()
+	public function getBlockChilds($placement = null)
 	{
+		if (null !== $placement) {
+			return (array) $this->_blockChilds[$placement];
+		}
+		
 		return $this->_blockChilds;
 	}
 	
@@ -354,22 +400,17 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 * @param  array $childs
 	 * @return Core_Block_View
 	 */
-	public function addBlockChilds(array $childs)
+	public function addBlockChilds(array $childs, $placement = self::BLOCK_PLACEMENT_AFTER)
 	{
 		foreach ($childs as $name => $child) {
 			if ($child instanceof Core_Block_View) {
-				$this->addBlockChild($child);
+				$this->addBlockChild($child, $placement);
 			} else if (is_array($child)) {
 				if (!is_numeric($name) && false !== stripos($name, '/') && !isset($child['name'])) {
 					$child['blockName'] = $name;
 				}
 				
-				$this->addBlockChild($child);
-				/*continue;
-				$name = $child['name'];
-				$type = $child['type'];
-				unset($child['name'], $child['type']);
-				$this->addBlockChild($type, $name, $child);*/
+				$this->addBlockChild($child, $placement);
 			}
 		}
 		
@@ -385,12 +426,15 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 * @throws Exception If not found
 	 * @return Core_Block_View
 	 */
-	public function addBlockChild($child)
+	public function addBlockChild($child, $placement = self::BLOCK_PLACEMENT_AFTER)
 	{
-		//var_dump($child);
+		if (null === $placement) {
+			$placement = self::BLOCK_PLACEMENT_AFTER;
+		}
+		
 		if ($child instanceof Core_Block_View) {
 			$child->setBlockParent($this);
-			$this->_blockChilds[$child->getBlockName()] = $child;
+			$this->_blockChilds[$placement][$child->getBlockName()] = $child;
 		} else if (is_array($child)) {
 			if (!isset($child['type'])) {
 				throw new Exception("Block options must have type");
@@ -408,7 +452,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 			unset($child['type']);
 			$class = new $className($child);
 			$class->setBlockParent($this);
-			$this->_blockChilds[$class->getBlockName()] = $class;
+			$this->_blockChilds[$placement][$class->getBlockName()] = $class;
 		}
 		
 		return $this;
@@ -420,9 +464,18 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 * @param  string $name
 	 * @return null|Core_Block_View
 	 */
-	public function getBlockChild($name)
+	public function getBlockChild($name, $placement = null)
 	{
-		return $this->_blockChilds[$name];
+		if (null === $placement) {
+			$placement = self::BLOCK_PLACEMENT_AFTER;
+		}
+		
+		return $this->_blockChilds[$placement][$name];
+	}
+	
+	public function getBlockChildPlacements()
+	{
+		return array_keys($this->_blockChilds);
 	}
 	
 	/**
@@ -431,10 +484,18 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 * @param  string $name
 	 * @return Core_Block_View
 	 */
-	public function delBlockChild($name)
+	public function delBlockChild($name, $placement = null)
 	{
-		$this->_blockChilds[$name] = null;
-		unset($this->_blockChilds[$name]);
+		if (null === $placement) {
+			foreach ($this->_blockChilds as $placement => $blocks) {
+				$this->_blockChilds[$placement][$name] = null;
+				unset($this->_blockChilds[$placement][$name]);
+			}
+		} else {
+			$this->_blockChilds[$placement][$name] = null;
+			unset($this->_blockChilds[$placement][$name]);
+		}
+		
 		return $this;
 	}
 	
@@ -737,11 +798,11 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
     		}
     	}
     	
-    	$response = '';
-    	foreach ($this->getBlockChilds() as $child) {
-   			$response .= $child->render();
-   		}
-    	
+    	$this->_renderBlocksToLayout();
+   		
+   		$response = '';
+   		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);
+   		
     	try {
 	    	$file = $this->_getScriptFile();
     		
@@ -757,6 +818,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
     		}
     	}
     	
+    	$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_AFTER);
     	return $response;
     }
     

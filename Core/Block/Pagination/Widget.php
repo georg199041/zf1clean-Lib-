@@ -124,6 +124,9 @@ class Core_Block_Pagination_Widget extends Core_Block_View
 	
 	public function render($name = null)
 	{
+   		$response = '';
+   		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);
+		
 		try {
 			$request   = Zend_Controller_Front::getInstance()->getRequest();
 			$paginator = $this->getPaginator();
@@ -144,11 +147,16 @@ class Core_Block_Pagination_Widget extends Core_Block_View
 				$this->addScriptPath(Zend_Layout::getMvcInstance()->getLayoutPath());
 			}
 			
-			//$return = $paginator->render();// BAD WAY
-			$return = $this->paginationControl($paginator, $this->getScrollingStyle(), $this->getPartial(), array('widget' => $this));
-			return $return;
+			$class = preg_replace('/[^\p{L}\-]/u', '_', $this->getBlockName());
+			$response .= '<div class="cbpw-block cbpw-block-' . $class . '">'
+			          .  $this->paginationControl($paginator, $this->getScrollingStyle(), $this->getPartial(), array('widget' => $this))
+			          . '</div>';
+			//$this->setRendered(true);
 		} catch (Exception $e) {
-			return $e->getMessage();
+			$response .= $e->getMessage();
 		}
+    	
+		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_AFTER);
+    	return $response;
 	}
 }
