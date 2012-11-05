@@ -13,15 +13,11 @@ class Core_Application_Bootstrap_Abstract extends Zend_Application_Bootstrap_Boo
 	public function initResourceLoader()
 	{
 		$this->getResourceLoader()->addResourceTypes(array(
-			'controllerhelpers' => array(
-				'namespace' => 'Controller_Helper',
-				'path'      => 'Controller/Helpers'
-			),
-			'controlleractions' => array(
-				'namespace' => 'Controller_Action',
-				'path'      => 'Controller/Actions'
-			),
 			// Required for new model structure
+			'controllerplugins' => array(
+				'namespace' => 'Controller_Plugin',
+				'path'      => 'Controller/Plugin'
+			),
             'model'   => array(
                 'namespace' => 'Model',
                 'path'      => 'Model',

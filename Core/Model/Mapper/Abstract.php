@@ -43,58 +43,90 @@ abstract class Core_Model_Mapper_Abstract
 	 * @var string
 	 */
 	protected $_className;
+
+	/**
+	 * Preprocess Save $entity
+	 *
+	 * @param Core_Model_Entity_Abstract $entity
+	 */
+	protected function _beforeSaveRow(Core_Model_Entity_Abstract $entity){}
 	
 	/**
-	 * Prepare identifiers for full fetch tree data
-	 * 
-	 * @param  string                          $pColName  Parent record column name
-	 * @param  string                          $cColName  Child records column name
-	 * @param  string|integer                  $pColValue Initial parent record column value (in $pColName)
-	 * @param  Core_Model_Collection_Abstract $rowset    Rowset data for get identifiers
-	 * @param  integer                         $depth     [OPTIONAL] Max tree depth
-	 * @param  array                           $result    [OPTIONAL] Pre formatted identifiers
-	 * @return array                                      Prepared identifiers
+	 * Postprocess Save $entity
+	 *
+	 * @param Core_Model_Entity_Abstract $entity
 	 */
-	/*protected function _prepareTreeIdentifiers($pColName, $cColName, $pColValue, Core_Model_Collection_Abstract $rowset, $depth = null, array $result = array())
-	{
-		if (!is_numeric($depth) || $depth < 1) {
-			return $result;
-		}
-		
-		foreach ($rowset as $row) {
-			if ($pColValue == $row[$cColName]) {
-				$result[] = $row->getPrimary();
-				$result = $this->_prepareTreeIdentifiers($pColName, $cColName, $row[$pColName], $rowset, $depth - 1, $result);
-			}
-		}
-		
-		return $result;
-	}*/
+	protected function _afterSaveRow(Core_Model_Entity_Abstract $entity){}
+
+	/**
+	 * Preprocess Save $collection
+	 *
+	 * @param Core_Model_Collection_Abstract $collection
+	 */
+	protected function _beforeSaveRows(Core_Model_Collection_Abstract $collection){}
 	
 	/**
-	 * Format rowset data to collection object as tree
-	 * 
-	 * @param  string         $pColName        Parent record column name
-	 * @param  string         $cColName        Child records column name
-	 * @param  string|integer $pColValue       Initial parent record column value (in $pColName)
-	 * @param  array          $rowset          Fetched data for conversion
-	 * @return Core_Model_Collection_Abstract Collection result
+	 * Postprocess Save $collection
+	 *
+	 * @param Core_Model_Collection_Abstract $collection
 	 */
-	/*protected function _formatTree($pColName, $cColName, $pColValue, $rowset)
-	{
-		$collection = $this->createCollection();
-		
-		foreach ($rowset as $row) {
-			if ($pColValue == $row[$cColName]) {
-				$entity = $this->create($row);
-				$entity->setPrimaryName($this->getPrimaryName());
-				$entity->setChilds($this->_formatTree($pColName, $cColName, $row[$pColName], $rowset));
-				$collection->append($entity);
-			}
-		}
-		
-		return $collection;
-	}*/
+	protected function _afterSaveRows(Core_Model_Collection_Abstract $collection){}
+	
+	/**
+	 * Preprocess delete $entity
+	 *
+	 * @param Core_Model_Entity_Abstract $entity
+	 */
+	protected function _beforeDeleteRow(Core_Model_Entity_Abstract $entity){}
+	
+	/**
+	 * Postprocess delete $entity
+	 *
+	 * @param Core_Model_Entity_Abstract $entity
+	 */
+	protected function _afterDeleteRow(Core_Model_Entity_Abstract $entity){}
+
+	/**
+	 * Preprocess delete $collection
+	 *
+	 * @param Core_Model_Collection_Abstract $collection
+	 */
+	protected function _beforeDeleteRows(Core_Model_Collection_Abstract $collection){}
+	
+	/**
+	 * Postprocess delete $collection
+	 *
+	 * @param Core_Model_Collection_Abstract $collection
+	 */
+	protected function _afterDeleteRows(Core_Model_Collection_Abstract $collection){}
+	
+	/**
+	 * Preprocess fetch $entity
+	 *
+	 * @param Core_Model_Entity_Abstract $entity
+	 */
+	protected function _beforeFetchRow(Core_Model_Entity_Abstract $entity){}
+	
+	/**
+	 * Postprocess fetch $entity
+	 *
+	 * @param Core_Model_Entity_Abstract $entity
+	 */
+	protected function _afterFetchRow(Core_Model_Entity_Abstract $entity){}
+	
+	/**
+	 * Preprocess fetch collection
+	 *
+	 * @param Core_Model_Collection_Abstract $collection
+	 */
+	protected function _beforeFetchRows(Core_Model_Collection_Abstract $collection){}
+	
+	/**
+	 * Postprocess fetch collection
+	 *
+	 * @param Core_Model_Collection_Abstract $collection
+	 */
+	protected function _afterFetchRows(Core_Model_Collection_Abstract $collection){}
 	
 	/**
 	 * Get current class name
@@ -233,9 +265,6 @@ abstract class Core_Model_Mapper_Abstract
     	$name = $this->getCollectionClassName();
     	$collection = new $name($data);
     	$collection->setMapper($this);
-    	//$this->getEntityClassName();
-		//$collection->setPrimaryName($this->getPrimaryName());
-    	
     	return $collection;
     }
 	
@@ -250,8 +279,6 @@ abstract class Core_Model_Mapper_Abstract
 		$name = $this->getEntityClassName();
 		$entity = new $name($data);
 		$entity->setMapper($this);
-		//$entity->setPrimaryName($this->getPrimaryName());
-		
 		return $entity;
 	}
 	
@@ -266,11 +293,13 @@ abstract class Core_Model_Mapper_Abstract
 	{
 		try {
 			$this->getSource()->beginTransanction();
+			$this->_beforeSaveRows($collection);
 			
 			$collection->each(function($value, $key) {
 				$value->save();
 			});
 			
+			$this->_afterSaveRows($collection);
 			$this->getSource()->commit();
 		} catch (Exception $e) {
 			$this->getSource()->rollback();
@@ -281,39 +310,24 @@ abstract class Core_Model_Mapper_Abstract
 	}
 	
 	/**
-	 * Preprocess save entity
-	 * 
-	 * @param Core_Model_Entity_Abstract $entity
-	 */
-	protected function _beforeSave(Core_Model_Entity_Abstract $entity){}
-	
-	/**
 	 * Save entity
 	 * 
 	 * @param Core_Model_Entity_Abstract $entity
 	 */
 	public function save(Core_Model_Entity_Abstract $entity)
 	{
-		$this->_beforeSave($entity);
-		
 		$pk = $this->getSource()->getPrimaryName();
+		$this->_beforeSaveRow($entity);
+		
 		if ($entity->{$pk}) {
 			$this->getSource()->update($entity->toArray(), array($pk . ' = ?' => $entity->{$pk}));
 		} else {
-			$id = $this->getSource()->insert($entity->toArray());
-			$entity->{$pk} = $id;
+			$entity->{$pk} = $this->getSource()->insert($entity->toArray());
 		}
 		
-		$this->_afterSave($entity);
+		$this->_afterSaveRow($entity);		
 		return $this;
 	}
-	
-	/**
-	 * Postprocess save entity
-	 * 
-	 * @param Core_Model_Entity_Abstract $entity
-	 */
-	protected function _afterSave(Core_Model_Entity_Abstract $entity){}
 	
 	/**
 	 * Delete all collection entities
@@ -326,11 +340,13 @@ abstract class Core_Model_Mapper_Abstract
 	{
 		try {
 			$this->getSource()->beginTransanction();
+			$this->_beforeDeleteRows($collection);
 				
 			$collection->each(function($value, $key) {
 				$value->delete();
 			});
-					
+			
+			$this->_afterDeleteRows($collection);
 			$this->getSource()->commit();
 		} catch (Exception $e) {
 			$this->getSource()->rollback();
@@ -341,13 +357,6 @@ abstract class Core_Model_Mapper_Abstract
 	}
 	
 	/**
-	 * Preprocess delete entity
-	 * 
-	 * @param Core_Model_Entity_Abstract $entity
-	 */
-	protected function _beforeDelete(Core_Model_Entity_Abstract $entity){}
-	
-	/**
 	 * Delete entity
 	 * 
 	 * @param  Core_Model_Entity_Abstract $entity
@@ -355,43 +364,14 @@ abstract class Core_Model_Mapper_Abstract
 	 */
 	public function delete(Core_Model_Entity_Abstract $entity)
 	{
-		$this->_beforeDelete($entity);
+		$this->_beforeDeleteRow($entity);
 		
 		$pk = $this->getSource()->getPrimaryName();
 		$this->getSource()->delete(array($pk . ' = ?' => $entity->{$pk}));
 		
-		$this->_afterDelete($entity);
+		$this->_afterDeleteRow($entity);
 		return $this;
 	}
-	
-	/**
-	 * Postprocess delete entity
-	 * 
-	 * @param Core_Model_Entity_Abstract $entity
-	 */
-	protected function _afterDelete(Core_Model_Entity_Abstract $entity){}
-	
-	/*public function fetchTree($pColName, $cColName, $pColValue, array $where = null, $order = null, $depth = null)
-	{
-		$identifiersWhere = (array) $where;
-		$identifiersWhere[$pColName] = $pColValue;
-		$rootRowsetIdentifiers = $this->fetchPrimaryAll($identifiersWhere, $order);
-		
-		$treeStructureData = $this->fetchAllColumns($where, $order, null, null, array($pColName, $cColName));
-		
-		$identifiers = $this->_prepareTreeIdentifiers($pColName, $cColName, $pColValue, $treeStructureData, $depth);
-		
-		$rowset = $this->getSource()->fetchAll(array('$in' => $identifiers));
-		
-		return $this->_formatTree($pColName, $cColName, $pColValue, $rowset);
-	}*/
-	
-	/**
-	 * Preprocess entity
-	 * 
-	 * @param Core_Model_Entity_Abstract $entity
-	 */
-	protected function _beforeFind(Core_Model_Entity_Abstract $entity){}
 	
 	/**
 	 * Find entity by pk value
@@ -402,31 +382,16 @@ abstract class Core_Model_Mapper_Abstract
 	public function find($id)
 	{
 		$entity = $this->create();
-		$this->_beforeFind($entity);
+		$this->_beforeFetchRow($entity);
 		
 		$row = $this->getSource()->find((int) $id);
 		if ($row) {
 			$entity->fill($row);
-			$this->_afterFind($entity);
-			return $entity;
 		}
 		
-		return null;
+		$this->_afterFetchRow($entity);
+		return $entity;
 	}
-	
-	/**
-	 * Postprocess entity
-	 * 
-	 * @param Core_Model_Entity_Abstract $entity
-	 */
-	protected function _afterFind(Core_Model_Entity_Abstract $entity){}
-	
-	/**
-	 * Preprocess collection
-	 * 
-	 * @param Core_Model_Collection_Abstract $collection
-	 */
-	protected function _beforeFindCollection(Core_Model_Collection_Abstract $collection){}
 	
 	/**
 	 * Find collection by pk values
@@ -437,30 +402,16 @@ abstract class Core_Model_Mapper_Abstract
 	public function findCollection(array $idArray)
 	{
 		$collection = $this->createCollection();
-		$this->_beforeFetchAll($collection);
+		$this->_beforeFetchRows($collection);
 		
 		$rowset = $this->getSource()->findCollection($idArray);
 		foreach ($rowset as $row) {
 			$collection->push($this->create($row));
 		}
 		
-		$this->_afterFetchAll($collection);
+		$this->_afterFetchRows($collection);
 		return $collection;
 	}
-	
-	/**
-	 * Postprocess collection
-	 * 
-	 * @param Core_Model_Collection_Abstract $collection
-	 */
-	protected function _afterFindCollection(Core_Model_Collection_Abstract $collection){}
-	
-	/**
-	 * Preprocess entity
-	 * 
-	 * @param Core_Model_Entity_Abstract $entity
-	 */
-	protected function _beforeFetchRow(Core_Model_Entity_Abstract $entity){}
 	
 	/**
 	 * Fetch single row
@@ -477,24 +428,11 @@ abstract class Core_Model_Mapper_Abstract
 		$row = $this->getSource()->fetchRow($where, $order);
 		if ($row) {
 			$entity->fill($row);
-			$this->_afterFetchRow($entity);
-			return $entity;
 		}
 		
-		return null;
+		$this->_afterFetchRow($entity);
+		return $entity;
 	}
-	
-	/**
-	 * Postprocess entity
-	 * 
-	 * @param Core_Model_Entity_Abstract $entity
-	 */
-	protected function _afterFetchRow(Core_Model_Entity_Abstract $entity){}
-	
-	/**
-	 * Preprocessing collection
-	 */
-	protected function _beforeFetchAll(Core_Model_Collection_Abstract $collection){}
 	
 	/**
 	 * Fetch collection
@@ -508,25 +446,71 @@ abstract class Core_Model_Mapper_Abstract
 	public function fetchAll(array $where = null, $order = null, $count = null, $offset = null)
 	{
 		$collection = $this->createCollection();		
-		$this->_beforeFetchAll($collection);
+		$this->_beforeFetchRows($collection);
 		
 		$rowset = $this->getSource()->fetchAll($where, $order, $count, $offset);
 		foreach ($rowset as $row) {
 			$collection->push($this->create($row));
 		}
 		
-		$this->_afterFetchAll($collection);		
+		$this->_afterFetchRows($collection);		
 		return $collection;
 	}
 	
 	/**
-	 * Post process collection
+	 * Post format tree structure
 	 * 
-	 * @param Core_Model_Collection_Abstract $collection
+	 * @param  Core_Model_Collection_Abstract $collection
+	 * @param  array $options
+	 * @return Core_Model_Collection_Abstract
 	 */
-	protected function _afterFetchAll(Core_Model_Collection_Abstract $collection){}
+	public function formatTree($collection, $options)
+	{
+		$return = $this->createCollection();
+		foreach ($collection as $row) {
+			if ($row->{$options['pColName']} == $options['pColValue']) {
+				$cOptions = array_merge($options, array('pColValue' => $row->{$options['cColName']}));
+				$row->setChilds($this->formatTree(clone $collection, $cOptions));
+				$return->push($row);
+			}
+		}
+		
+		return $return;
+	}
 	
-	public function fetchTree(){}
+	/**
+	 * Fetch rows for tree like data structure
+	 * 
+	 * @param array $where
+	 * @param array|string $order
+	 * @param integer|null $depth
+	 * @param array $options
+	 * @return Core_Model_Collection_Abstract
+	 */
+	public function fetchTree(array $where = null, $order = null, $depth = null, array $options = array())
+	{
+		$required = array(
+			'pColName'  => $this->getSource()->getName() . '_' . $this->getSource()->getPrimaryName(),
+			'cColName'  => $this->getSource()->getPrimaryName(),
+			'pColValue' => NULL
+		);
+		
+		$options = array_intersect($options, $required);
+		$options = array_merge($required, $options);
+		
+		$collection = $this->createCollection();
+		$this->_beforeFetchRows($collection);		
+		
+		$rowset = $this->getSource()->fetchTree($where, $order, $depth, $options);
+		foreach ($rowset as $row) {
+			$collection->push($this->create($row));
+		}
+		
+		$this->_afterFetchRows($collection);		
+		$collection = $this->formatTree($collection, $options);
+		return $collection;
+	}
+	
 	public function fetchBranch(){}
 	
 	/**

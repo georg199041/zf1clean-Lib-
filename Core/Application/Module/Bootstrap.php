@@ -57,16 +57,12 @@ abstract class Core_Application_Module_Bootstrap extends Core_Application_Bootst
 	public function initResourceLoader()
 	{
 		$this->getResourceLoader()->addResourceTypes(array(
-			'controllerhelpers' => array(
-				'namespace' => 'Controller_Helper',
-				'path'      => 'Controller/Helper'
-			),
-			'controlleractions' => array(
-				'namespace' => 'Controller_Action',
-				'path'      => 'Controller/Action'
-			),
 			// Required for new model structure
-            'model'   => array(
+			'controllerplugins' => array(
+				'namespace' => 'Controller_Plugin',
+				'path'      => 'Controller/Plugin'
+			),
+			'model'   => array(
                 'namespace' => 'Model',
                 'path'      => 'Model',
             ),

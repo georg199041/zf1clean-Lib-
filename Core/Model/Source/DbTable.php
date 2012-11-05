@@ -68,6 +68,8 @@ abstract class Core_Model_Source_DbTable extends Zend_Db_Table_Abstract implemen
 	
 	/**
 	 * Acessor method
+	 * 
+	 * @return string
 	 */
 	public function getName()
 	{
@@ -82,6 +84,7 @@ abstract class Core_Model_Source_DbTable extends Zend_Db_Table_Abstract implemen
 	
 	/**
 	 * Acessor method
+	 * @param string $name
 	 */
 	public function setName($name)
 	{
@@ -292,9 +295,9 @@ abstract class Core_Model_Source_DbTable extends Zend_Db_Table_Abstract implemen
 	 * Fetch only primary column
 	 * 
 	 * @param array $where
-	 * @param unknown_type $order
-	 * @param unknown_type $count
-	 * @param unknown_type $offset
+	 * @param string|array $order
+	 * @param integer $count
+	 * @param integer $offset
 	 */
 	public function fetchPrimaryAll(array $where = null, $order = null, $count = null, $offset = null)
 	{
@@ -331,7 +334,7 @@ abstract class Core_Model_Source_DbTable extends Zend_Db_Table_Abstract implemen
 		$select = $this->createSelect();
 		$rowset = array();
 		if (count($notExists) > 0) {
-			$select->where($this->_db->quoteIdentifier($this->getPrimaryName()) . ' IN (' . implode(',', $notExists) . ')');
+			$select->where($this->getAdapter()->quoteIdentifier($this->getPrimaryName()) . ' IN (' . implode(',', $notExists) . ')');
 			//echo $select;
 			$rowset = $this->_fetch($select);
 		}
@@ -381,22 +384,146 @@ abstract class Core_Model_Source_DbTable extends Zend_Db_Table_Abstract implemen
 		return $row;
 	}
 	
+	/**
+	 * Fetch count of rows
+	 * 
+	 * @param array $where
+	 * @param integer $count
+	 * @param integer $offset
+	 * @return number
+	 */
 	public function fetchCount(array $where = null, $count = null, $offset = null)
 	{
 		$select = $this->createSelect($where, null, $count, $offset, new Zend_Db_Expr('COUNT(1)'));
 		return (int) current($this->_fetch($select, Zend_Db::FETCH_COLUMN));
 	}
 	
-	public function fetchTree()
+	/**
+	 * Prepare tree identifiers array
+	 * 
+	 * @param array $rows
+	 * @param array $options
+	 * @param integer $depth
+	 * @param array $identifiers
+	 * @return array
+	 */
+	public function prepareTreeIds($rows, $options, $depth, $identifiers = array())
 	{
+		if (null !== $depth) {
+			if ($depth < 1) {
+				return $identifiers;
+			} else {
+				$depth--;
+			}
+		}
+		
+		foreach ($rows as $row) {
+			if ($row[$options['pColName']] == $options['pColValue']) {
+				$identifiers[] = $row[$options['cColName']];
+				$cOptions = array_merge($options, array('pColValue' => $row[$options['cColName']]));
+				$identifiers = $this->prepareTreeIds($rows, $cOptions, $depth, $identifiers);
+			}
+		}
+		
+		return $identifiers;
+	}
+	
+	/**
+	 * Fetch tree data
+	 * Used identity map cache pattern
+	 * 
+	 * @param array $where
+	 * @param array|string $order
+	 * @param integer $depth
+	 * @param array $options
+	 * @return array
+	 */
+	public function fetchTree(array $where = null, $order = null, $depth = null, array $options = array())
+	{
+		$select = $this->createSelect($where, $order, null, null, array($options['pColName'], $options['cColName']));
+		$rows   = $this->_fetch($select);
+		
+		$identifiers = $this->prepareTreeIds($rows, $options, $depth);
+		if (count($identifiers) == 0) {
+			return array();
+		}
+		
+		// Parse cahed data
+		$exists    = array();
+		$notExists = array();
+		foreach ($identifiers as $id) {
+			if ($this->cacheTest($this->getClassName() . '_' . $id)) {
+				$exists[$id] = $this->cacheLoad($this->getClassName() . '_' . $id);
+			} else {
+				$notExists[] = $id;
+			}
+		}
+		
+		// Modify query for faster load unloaded data
+		$select = $this->createSelect();
+		$rowset = array();
+		if (count($notExists) > 0) {
+			$select->where($this->getAdapter()->quoteIdentifier($this->getPrimaryName()) . ' IN (' . implode(',', $notExists) . ')');
+			//echo $select;
+			$rowset = $this->_fetch($select);
+		}
+
+		// Combine result
+		$return = array();
+		foreach ($identifiers as $id) {
+			foreach ($exists as $item) {
+				if ($id == $item[$this->getPrimaryName()]) {
+					$return[] = $item;
+				}
+			}
+				
+			foreach ($rowset as $item) {
+				if ($id == $item[$this->getPrimaryName()]) {
+					$this->cacheSave($item, $this->getClassName() . '_' . $id);
+					$return[] = $item;
+				}
+			}
+		}
+		
+		return $return;
+	}
+	
+	// TODO: goto up for each parent
+	public function prepareBranchIds($rows, $options, $identifiers = array())
+	{
+		if (null === $options['pColValue']) {
+			return $identifiers;
+		}
+		
+		foreach ($rows as $row) {
+			if ($row[$options['cColName']] == $options['pColValue']) {
+				$identifiers[] = $row[$options['pColName']];
+				$pOptions = array_merge($options, array('pColValue' => $row[$options['pColName']]));
+				$identifiers = $this->prepareBranchIds($rows, $pOptions, $identifiers);
+			}
+		}
+		
+		return $identifiers;
+	}
+	
+	public function fetchBranch(array $where = null, $order = null, array $options = array())
+	{
+		$select = $this->createSelect($where, $order, null, null, array($options['pColName'], $options['cColName']));
+		$rows   = $this->_fetch($select);
+		
+		$identifiers = $this->prepareBranchIds($rows, $options);
+		if (count($identifiers) == 0) {
+			return array();
+		}
 		
 	}
 	
-	public function fetchBranch()
-	{
-		
-	}
-	
+	/**
+	 * Find row by Id
+	 * 
+	 * @param  integer|string $id
+	 * @return array|null
+	 */
 	public function find($id)
 	{
 		return $this->fetchRow(array(
@@ -404,8 +531,16 @@ abstract class Core_Model_Source_DbTable extends Zend_Db_Table_Abstract implemen
 		));
 	}
 	
+	/**
+	 * Fetch collection of rows by his ids
+	 * 
+	 * @param  array $idArray
+	 * @return array
+	 */
 	public function findCollection(array $idArray)
 	{
-		
+		return $this->fetchAll(array(
+			$this->getAdapter()->quoteIdentifier($this->getPrimaryName()) . ' IN (?)' => $idArray
+		));
 	}
 }
