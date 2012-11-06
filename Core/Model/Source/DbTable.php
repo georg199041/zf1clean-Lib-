@@ -488,34 +488,67 @@ abstract class Core_Model_Source_DbTable extends Zend_Db_Table_Abstract implemen
 		return $return;
 	}
 	
-	// TODO: goto up for each parent
-	public function prepareBranchIds($rows, $options, $identifiers = array())
-	{
-		if (null === $options['pColValue']) {
-			return $identifiers;
-		}
-		
-		foreach ($rows as $row) {
-			if ($row[$options['cColName']] == $options['pColValue']) {
-				$identifiers[] = $row[$options['pColName']];
-				$pOptions = array_merge($options, array('pColValue' => $row[$options['pColName']]));
-				$identifiers = $this->prepareBranchIds($rows, $pOptions, $identifiers);
-			}
-		}
-		
-		return $identifiers;
-	}
-	
 	public function fetchBranch(array $where = null, $order = null, array $options = array())
 	{
 		$select = $this->createSelect($where, $order, null, null, array($options['pColName'], $options['cColName']));
 		$rows   = $this->_fetch($select);
+			
+		$identifiers = array();
+		while (null !== $options['pColValue']) {
+			foreach ($rows as $row) {
+				if ($row[$options['cColName']] == $options['pColValue']) {
+					if (null !== $row[$options['pColName']]) {
+						$identifiers[] = $row[$options['pColName']];
+					}
+					
+					$options['pColValue'] = $row[$options['pColName']];					
+					break;
+				}
+			}
+		}
 		
-		$identifiers = $this->prepareBranchIds($rows, $options);
 		if (count($identifiers) == 0) {
 			return array();
 		}
 		
+		// Parse cahed data
+		$exists    = array();
+		$notExists = array();
+		foreach ($identifiers as $id) {
+			if ($this->cacheTest($this->getClassName() . '_' . $id)) {
+				$exists[$id] = $this->cacheLoad($this->getClassName() . '_' . $id);
+			} else {
+				$notExists[] = $id;
+			}
+		}
+			
+		// Modify query for faster load unloaded data
+		$select = $this->createSelect();
+		$rowset = array();
+		if (count($notExists) > 0) {
+			$select->where($this->getAdapter()->quoteIdentifier($this->getPrimaryName()) . ' IN (' . implode(',', $notExists) . ')');
+			//echo $select;
+			$rowset = $this->_fetch($select);
+		}
+
+		// Combine result
+		$return = array();
+		foreach ($identifiers as $id) {
+			foreach ($exists as $item) {
+				if ($id == $item[$this->getPrimaryName()]) {
+					$return[] = $item;
+				}
+			}
+				
+			foreach ($rowset as $item) {
+				if ($id == $item[$this->getPrimaryName()]) {
+					$this->cacheSave($item, $this->getClassName() . '_' . $id);
+					$return[] = $item;
+				}
+			}
+		}
+		
+		return $return;
 	}
 	
 	/**

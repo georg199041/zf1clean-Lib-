@@ -495,7 +495,7 @@ abstract class Core_Model_Mapper_Abstract
 			'pColValue' => NULL
 		);
 		
-		$options = array_intersect($options, $required);
+		$options = array_intersect_key($options, $required);
 		$options = array_merge($required, $options);
 		
 		$collection = $this->createCollection();
@@ -511,7 +511,42 @@ abstract class Core_Model_Mapper_Abstract
 		return $collection;
 	}
 	
-	public function fetchBranch(){}
+	public function formatBranch($collection, $options)
+	{
+		do {
+			foreach ($collection as $entity) {
+				if ($entity->{$options['pColValue']}) {
+					$parent = clone $entity;//TODO
+				}
+			}
+		} while (null !== $options['pColValue']);
+		
+		return $parent;
+	}
+	
+	public function fetchBranch(array $where = null, $order = null, array $options = array())
+	{
+		$required = array(
+			'pColName'  => $this->getSource()->getName() . '_' . $this->getSource()->getPrimaryName(),
+			'cColName'  => $this->getSource()->getPrimaryName(),
+			'pColValue' => NULL
+		);
+		
+		$options = array_intersect_key($options, $required);
+		$options = array_merge($required, $options);
+		
+		$collection = $this->createCollection();
+		$this->_beforeFetchRows($collection);		
+		
+		$rowset = $this->getSource()->fetchBranch($where, $order, $options);
+		foreach ($rowset as $row) {
+			$collection->push($this->create($row));
+		}
+		
+		$this->_afterFetchRows($collection);
+		$branch = $this->formatBranch($collection, $options);
+		return $branch;
+	}
 	
 	/**
 	 * Fetch total count of entities from data source
