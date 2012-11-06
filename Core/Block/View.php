@@ -1,5 +1,4 @@
 <?php
-// TODO: REFACTOR BLOCK TO USE PLACEMENT FLAG
 
 require_once "Zend/View/Interface.php";
 
@@ -794,7 +793,9 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	    			$block = Core::getBlock($blockName);
 	    			$block->setScriptName($this->getScriptName());
 	    			return $block->render();
-	    		} catch (Exception $e) {}
+	    		} catch (Exception $e) {
+	    			//echo ' ' . $blockName . ' ' . $e->getMessage();
+	    		}
     		}
     	}
     	

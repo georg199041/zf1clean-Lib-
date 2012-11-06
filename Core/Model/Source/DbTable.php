@@ -58,7 +58,10 @@ abstract class Core_Model_Source_DbTable extends Zend_Db_Table_Abstract implemen
 	{
 		parent::_setup();
 		
-		$this->install();
+		//$tables = $this->getAdapter()->listTables();
+		//if (!in_array($this->getName(), $tables)) {
+			//$this->install();
+		//}
 	}
 	
 	/**
