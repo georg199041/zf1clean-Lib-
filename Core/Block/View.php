@@ -30,6 +30,13 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	protected static $_engine;
 	
 	/**
+	 * Cache object
+	 * 
+	 * @var object
+	 */
+	protected static $_cache;
+	
+	/**
 	 * Template script name
 	 * 
 	 * @var string
@@ -140,44 +147,6 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	}
 	
 	/**
-	 * Parse block class name from script name
-	 * 
-	 * @return string
-	 */
-	protected function _getBlockClassName()
-	{
-		$name = $this->getScriptName();
-		if (null === $name) {
-			throw new Exception("Script name not defined");
-		}
-		
-		require_once "Zend/Filter/Word/DashToCamelCase.php";
-		$filter = new Zend_Filter_Word_DashToCamelCase();
-		
-		$viewSuffix  = Zend_Controller_Action_HelperBroker::getStaticHelper('viewRenderer')->getViewSuffix();		
-		$name = str_ireplace(".$viewSuffix", '', $name);
-		
-		// Search in views
-		$module = Zend_Controller_Front::getInstance()->getRequest()->getModuleName();
-		$class = str_ireplace('/', ' ', $name);
-		$class = $filter->filter($class);
-		$class = ucwords($class);
-		$class = str_ireplace(' ', '_', $class);
-		echo $className = $filter->filter($module) . '_Block_' . $class;
-		
-		if (@class_exists($className, true)) {
-			
-			//return $className;
-		}
-		
-		// Search in layouts
-		echo $className = 'Application_Block_' . $class;
-		if (@class_exists($className, true)) {
-			//return $className;
-		}
-	}
-	
-	/**
 	 * Get block name variants for loader
 	 * 
 	 * @throws Exception
@@ -224,6 +193,12 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 		return '';
 	}
 	
+	/**
+	 * Render other blocks to specified placement
+	 * 
+	 * @param  string $placement response key
+	 * @return string
+	 */
 	protected function _renderBlocks($placement = self::BLOCK_PLACEMENT_AFTER)
 	{
 		$response = '';
@@ -234,6 +209,9 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 		return $response;
 	}
 	
+	/**
+	 * Render blocks to layout keys
+	 */
 	protected function _renderBlocksToLayout()
 	{
 		$layout = Zend_Layout::startMvc();
@@ -541,6 +519,9 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	public function init()
 	{}
 	
+	public function preRender()
+	{}
+	
 	/**
 	 * Get rendering core engine
 	 * 
@@ -648,6 +629,26 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
     {
     	$this->getEngine()->addBasePath($path, $classPrefix);
     	return $this;
+    }
+    
+    /**
+     * Set new cache object
+     * 
+     * @param Zend_Cache_Core $core
+     */
+    public static function setCache(Zend_Cache_Core $core)
+    {
+    	self::$_cache = $core;
+    }
+    
+    /**
+     * Get cache object
+     * 
+     * @return Zend_Cache_Core
+     */
+    public static function getCache()
+    {
+    	return self::$_cache;
     }
     
     /**
@@ -782,6 +783,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
     		return '';
     	}
     	
+    	$exceptions = array();
     	if (null !== $name) {
     		$this->setScriptName($name);
     	}
@@ -794,7 +796,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	    			$block->setScriptName($this->getScriptName());
 	    			return $block->render();
 	    		} catch (Exception $e) {
-	    			//echo ' ' . $blockName . ' ' . $e->getMessage();
+	    			$exceptions[] = $e->getMessage();
 	    		}
     		}
     	}
@@ -804,18 +806,28 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
    		$response = '';
    		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);
    		
-    	try {
-	    	$file = $this->_getScriptFile();
-    		
-	    	ob_start();
-    		include $file;
-    		$script = ob_get_clean();
-    		
-    		$this->setRendered(true);
+   		try {
+   			if (null !== self::getCache() && self::getCache()->test($this->getBlockName())) {
+   				$script = self::getCache()->load($this->getBlockName());
+   			} else {
+	   			$file = $this->_getScriptFile();
+	   			$this->preRender();
+	    		
+		    	ob_start();
+	    		include $file;
+	    		$script = ob_get_clean();
+	    		
+	    		$this->setRendered(true);
+	    		if (null !== self::getCache()) {
+	    			self::getCache()->save($script, $this->getBlockName());
+	    		}
+   			}
+   			
     		$response .= $this->_renderHighliter($file) . $script;
     	} catch (Exception $e) {
+    		$exceptions[] = $e->getMessage();
     		if (count($this->getBlockChilds()) == 0) {
-    			$response = $e->getMessage();
+    			$response = implode("\n", $exceptions);
     		}
     	}
     	
