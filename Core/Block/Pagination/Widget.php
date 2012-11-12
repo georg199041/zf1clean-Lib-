@@ -10,7 +10,7 @@ class Core_Block_Pagination_Widget extends Core_Block_View
 	
 	protected $_totalItemsCount = 10;
 	
-	protected $_itemCountPerPage = 1;
+	protected $_itemCountPerPage = 20;
 	
 	protected $_currentPageNumber = 1;
 	
