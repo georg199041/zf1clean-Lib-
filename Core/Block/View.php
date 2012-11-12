@@ -286,6 +286,14 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 */
 	public function getScriptName()
 	{
+		if (null === $this->_scriptName) {
+			require_once 'Zend/Controller/Action/HelperBroker.php';
+			$viewSuffix = Zend_Controller_Action_HelperBroker::getStaticHelper('viewRenderer')->getViewSuffix();
+			$name = $this->getBlockName();
+			$name = substr($name, strpos($name, '/') + 1);
+			$this->_scriptName = $name . '.' . $viewSuffix;
+		}
+		
 		return $this->_scriptName;
 	}
 	
@@ -780,7 +788,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
     public function render($name = null)
     {
     	if ($this->isRendered()) {
-    		return '';
+    		//return '';
     	}
     	
     	$exceptions = array();
@@ -842,6 +850,6 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
      */
     public function __toString()
     {
-    	return $this->render('DUMMY_STRING'); // REQUIRED by interface
+    	return $this->render(); // REQUIRED by interface
     }
 }

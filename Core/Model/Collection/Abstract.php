@@ -41,6 +41,16 @@ class Core_Model_Collection_Abstract implements Iterator, Countable, ArrayAccess
 			$this->fill(array_values($data));
 		}
 	}
+	
+	public function __call($method, $arguments)
+	{
+		if (@preg_match('/(find(?:One|All)?By)(.+)/', $method, $match)) {
+			return $this->{$match[1]}($match[2], $arguments[0]);
+		}
+        
+		require_once 'Zend/Db/Table/Row/Exception.php';
+        throw new Zend_Db_Table_Row_Exception("Unrecognized method '$method()'");
+	}
 
 	public function setMapper(Core_Model_Mapper_Abstract $mapper)
 	{
@@ -55,6 +65,38 @@ class Core_Model_Collection_Abstract implements Iterator, Countable, ArrayAccess
 		}
 	
 		return $this->_mapper;
+	}
+	
+	public function findOneBy($key, $value)
+	{
+		foreach ($this->_data as $row) {
+			echo $row[$key];
+			if ($row[$key] == $value) {
+				return $row;
+			}
+		}
+		
+		return false;
+	}
+	
+	public function findAllBy($key, $value)
+	{
+		$collection = clone $this;
+		$collection->clear();
+		
+		foreach ($this->_data as $row) {
+			if ($row[$key] == $value) {
+				$collection->push($row);
+			}
+		}
+		
+		return $collection;
+	}
+	
+	public function clear()
+	{
+		$this->_data = array();
+		return $this;
 	}
 	
 	/**
