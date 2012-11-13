@@ -842,7 +842,10 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
     	} catch (Exception $e) {
     		$exceptions[] = $e->getMessage();
     		if (count($this->getBlockChilds()) == 0) {
-    			$response = implode(" OR\n", $exceptions);
+    			require_once 'Zend/View/Exception.php';
+				$ve = new Zend_View_Exception(implode(" OR\n", $exceptions));
+				$ve->setView($this);
+				throw $ve;
     		}
     	}
     	
