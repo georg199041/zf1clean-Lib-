@@ -290,8 +290,15 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 			require_once 'Zend/Controller/Action/HelperBroker.php';
 			$viewSuffix = Zend_Controller_Action_HelperBroker::getStaticHelper('viewRenderer')->getViewSuffix();
 			$name = $this->getBlockName();
+			$namespace = substr($name, 0, strpos($name, '/'));
 			$name = substr($name, strpos($name, '/') + 1);
 			$this->_scriptName = $name . '.' . $viewSuffix;
+			
+			try {
+				$this->addScriptPath(
+					Zend_Controller_Front::getInstance()->getModuleDirectory($namespace) . '/views/scripts/'
+				);
+			} catch (Exception $e) {}
 		}
 		
 		return $this->_scriptName;
@@ -592,7 +599,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
      * Set script search path
      * Proxied to engine
      * 
-     * @param unknown_type $path
+     * @param  string $path
      * @return Core_Block_View
      */
     public function setScriptPath($path)
