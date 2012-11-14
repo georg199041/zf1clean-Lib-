@@ -336,23 +336,26 @@ class Core_Block_Grid_Widget extends Core_Block_View
 	
 	public function render($name = null)
 	{
-   		$response = '';
-   		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);
+		$class = preg_replace('/[^\p{L}\-]/u', '_', $this->getBlockName());
+   		
+   		$pre = $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);
 		
 		try {
-			$class = preg_replace('/[^\p{L}\-]/u', '_', $this->getBlockName());
-			$response .= '<div class="cbgw-block cbgw-block-' . $class . '"><table ' . $this->toHtmlAttributes() . '>'
+			$response = '<table ' . $this->toHtmlAttributes() . '>'
 				   . $this->_renderColAttribs()
 			       . $this->_renderThead()
 			       . $this->_renderTbody()
 			       . $this->_renderTfoot()
-			       . '</table></div>';
+			       . '</table>';
 			//$this->setRendered(true);
 		} catch (Exception $e) {
-			$response .= $e->getMessage();
+			$response = $e->getMessage();
 		}
 		
-		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_AFTER);
-    	return $response;
+		$post = $this->_renderBlocks(self::BLOCK_PLACEMENT_AFTER);
+    	
+    	return '<div class="cbgw-block cbgw-block-' . $class . '">'
+    		 . $pre . $response . $post
+    	     . '</div>';
 	}
 }
