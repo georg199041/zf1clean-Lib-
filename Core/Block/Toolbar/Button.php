@@ -23,12 +23,16 @@ class Core_Block_Toolbar_Button extends Core_Block_Toolbar_Link
 	
 	public function render()
 	{
-		$this->setAttribute('href', $this->getToolbar()->url($this->getUrlOptions(), $this->getUrlRoute(), true));
-		$this->delAttribute('class');
+		$this->setAttribute('formaction', $this->getToolbar()->url($this->getUrlOptions(), $this->getUrlRoute(), true));
+		$this->setAttribute('class', trim($this->getAttribute('class') . ' cbtw-button-icon-' . $this->getIconClass()));
+		$this->setAttribute('name', $this->getName());
+		$this->setAttribute('value', 'true');
 		
+		return '<button ' . $this->toHtmlAttributes() . '>' . $this->getTitle() . '</button>';
+		/*
 		return '<a ' . $this->toHtmlAttributes() . '>'
 			 . '<span class="cbtw-button-icon ' . $this->getIconClass() . '"></span>'
 			 . '<span class="cbtw-button-text">' . $this->getTitle() . '</span>'
-			 . '</a>';
+			 . '</a>';*/
 	}
 }

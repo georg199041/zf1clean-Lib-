@@ -129,17 +129,39 @@ class Core_Block_Form_Widget extends Core_Block_View
 	 */
 	public function render($name = null)
 	{
-   		$response = '';
-   		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);
+		$class  = preg_replace('/[^\p{L}\-]/u', '_', $this->getBlockName());
+		$before = $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);
 		
 		try {
-			$response .= $this->getForm()->render();
+			$this->setAttribute('enctype', $this->getForm()->getEnctype());
+			$this->setAttribute('method', $this->getForm()->getMethod());
+			$this->setAttribute('action', $this->getForm()->getAction());
+			
+			$endTag = '</form>';
+			$startTag = $this->form($this->getForm()->getName(), $this->getAttributes(), false);
+			$startTag = str_replace($endTag, '', $startTag);
+			
+			$this->getForm()->addElementPrefixPath('Core_Block_Form_Decorator', 'Core/Block/Form/Decorator', 'decorator');
+			$this->getForm()->setElementDecorators(array('CompositeElement'));
+			
+			$this->getForm()->addDisplayGroupPrefixPath('Core_Block_Form_Decorator', 'Core/Block/Form/Decorator', 'decorator');
+			$this->getForm()->setDisplayGroupDecorators(array('CompositeGroup'));
+			
+			$this->getForm()->addPrefixPath('Core_Block_Form_Decorator', 'Core/Block/Form/Decorator', 'decorator');
+			$this->getForm()->setDecorators(array('CompositeForm'));
+			
+			$response = $this->getForm()->render();
+			
 			//$this->setRendered(true);
 		} catch (Exception $e) {
-			$response .= $e->getMessage();
+			$response = $e->getTraceAsString();
+			//require_once 'Zend/View/Exception.php';
+			//$ve = new Zend_View_Exception($e->getMessage());
+			//$ve->setView($this);
+			//throw $ve;
 		}
     	
-		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_AFTER);
-    	return $response;
+		$after = $this->_renderBlocks(self::BLOCK_PLACEMENT_AFTER);
+    	return '<div class="cbfw-block cbfw-block-' . $class . '">' . $startTag . $before . $response . $after . $endTag . '</div>';
 	}
 }
