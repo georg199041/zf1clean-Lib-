@@ -206,7 +206,7 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		$xhtml = '';
 		
 		foreach ($this->getColumns() as $column) {
-			$xhtml .= '<col ' . $column->renderColAttribs() . '>';
+			$xhtml .= '<col ' . $column->renderColAttribs() . '>' . PHP_EOL;
 		}
 		
 		return $xhtml;
@@ -216,7 +216,7 @@ class Core_Block_Grid_Widget extends Core_Block_View
 	{
 		$request = Zend_Controller_Front::getInstance()->getRequest();
 		
-		$xhtml = '';
+		$xhtml = '<tr>';
 		$hasFilters = false;
 		$j = 0;
 		foreach ($this->getColumns() as $column) {
@@ -260,37 +260,54 @@ class Core_Block_Grid_Widget extends Core_Block_View
 				$position = 'cbgw-columnlast';
 			}
 				
-			$xhtml .= '<th class="cbgw-header ' . $position . ' cbgw-header-' . $column->getName() . '" ' . $column->renderThAttribs() . '>' . $title . '</th>';
+			$xhtml .= '<th class="cbgw-header ' . $position . ' cbgw-header__' . str_replace('_', '-', $column->getName()) . '" ' . $column->renderThAttribs() . '>' . $title . '</th>' . PHP_EOL;
 			$j++;
 		}
 		
+		$xhtml .= '</tr>';
+		
 		if ($hasFilters) {
 			$filters = '';
+			$filtersValues = (array) $request->getParam('filter');
+			$j = 0;
 			foreach ($this->getColumns() as $column) {
 				$filter = '';
 				if ($column->isFilterable()) {
-					$value = $request->getParam('filter_' . $column->getName());
+					$value = $filtersValues[$column->getName()];
 					switch ($column->getFilterableType()) {
 						case self::FILTER_LIKE:
-							$filter .= $this->formText('filter_' . $column->getName(), $value, $column->getFilterableOptions());
+							$filter .= $this->formText('filter[' . $column->getName() . ']', $value, $column->getFilterableOptions());
 							break;
 						case self::FILTER_SELECT:
-							$filter .= $this->formSelect('filter_' . $column->getName(), $value, null, $column->getFilterableOptions());
+							$filter .= $this->formSelect('filter[' . $column->getName() . ']', $value, null, $column->getFilterableOptions());
 							break;
 						case self::FILTER_EQUAL:
 						default:
-							$filter .= $this->formText('filter_' . $column->getName(), $value, $column->getFilterableOptions());
+							$filter .= $this->formText('filter[' . $column->getName() . ']', $value, $column->getFilterableOptions());
 							break;
 					}
 				}
 				
-				$filters .= '<th class="cbgw-filter-' . $column->getName() . '">' . $filter . '</th>';
+				$position = '';
+				if ($j == 0) {
+					$position = 'cbgw-columnfirst';
+				} else if ($j == count($this->getColumns()) - 1) {
+					$position = 'cbgw-columnlast';
+				}
+				
+				$filters .= '<th class="cbgw-filter ' . $position . ' cbgw-filter__' . str_replace('_', '-', $column->getName()) . '">' . $filter . '</th>' . PHP_EOL;
+				$j++;
 			}
 			
-			$xhtml .= '</tr><tr>' . $filters;
+			$xhtml .= '<tr>' . $filters . '</tr>';
 		}
 		
-		return '<thead><tr>' . $xhtml . '</tr></thead>';
+//		$xhtml = $this->form('cbgw-filter-form', array(
+//			'method' => 'get',
+//			'action' => $this->url($this->getRouteOptions(), $this->getRouteName())
+//		), $xhtml . '<span class="cbgw-filter-form-submit"><button>Apply filter</button></span>');
+		
+		return '<thead>' . $xhtml . '</thead>';
 	}
 	
 	protected function _renderTbody()
@@ -299,7 +316,7 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		if (count($this->getData()) > 0) {
 			$i = 0;
 			foreach ($this->getData() as $row) {
-				$xhtml .= '<tr class="' . (!($i % 2) ? 'odd' : 'even') . '">';
+				$xhtml .= '<tr class="' . (!($i % 2) ? 'odd' : 'even') . '">' . PHP_EOL;
 				$j = 0;
 				foreach ($this->getColumns() as $name => $column) {
 					$position = '';
@@ -312,21 +329,23 @@ class Core_Block_Grid_Widget extends Core_Block_View
 					$column->setAttribute('class', "cbgw-column {$position} cbgw-column-{$column->getName()}");
 					$column->setRow($row);
 					$attribs = $column->toHtmlAttributes();
-					$xhtml .= "<td {$attribs}>{$column->render()}</td>";
+					$xhtml .= "<td {$attribs}>{$column->render()}</td>" . PHP_EOL;
 					$j++;
 				}
-				$xhtml .= '</tr>';
+				$xhtml .= '</tr>' . PHP_EOL;
 				$i++;
 			}
 		} else {
-			$xhtml .= '<tr><td class="cbgw-body-empty" colspan="'
+			$xhtml .= '<tr>' . PHP_EOL
+				   . '<td class="cbgw-body-empty" colspan="'
 				   . count($this->getColumns())
 			       . '">'
 			       . $this->getMessage('emptyList', 'Empty list')
-			       . '</td></tr>';
+			       . '</td>' . PHP_EOL
+			       . '</tr>' . PHP_EOL;
 		}
 		
-		return '<tbody>' . $xhtml . '</tbody>';
+		return '<tbody>' . PHP_EOL . $xhtml . PHP_EOL . '</tbody>';
 	}
 	
 	protected function _renderTfoot()
@@ -341,11 +360,11 @@ class Core_Block_Grid_Widget extends Core_Block_View
    		$pre = $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);
 		
 		try {
-			$response = '<table ' . $this->toHtmlAttributes() . '>'
-				   . $this->_renderColAttribs()
-			       . $this->_renderThead()
-			       . $this->_renderTbody()
-			       . $this->_renderTfoot()
+			$response = '<table ' . $this->toHtmlAttributes() . '>' . PHP_EOL
+				   . $this->_renderColAttribs() . PHP_EOL
+			       . $this->_renderThead() . PHP_EOL
+			       . $this->_renderTbody() . PHP_EOL
+			       . $this->_renderTfoot() . PHP_EOL
 			       . '</table>';
 			//$this->setRendered(true);
 		} catch (Exception $e) {
@@ -353,9 +372,9 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		}
 		
 		$post = $this->_renderBlocks(self::BLOCK_PLACEMENT_AFTER);
-    	
-    	return '<div class="cbgw-block cbgw-block-' . $class . '">'
+		
+		return '<div class="cbgw-block cbgw-block-' . $class . '" action="' . $this->url($this->getRouteOptions(), $this->getRouteName()) . '">'
     		 . $pre . $response . $post
-    	     . '</div>';
+    		 . '</div>';
 	}
 }

@@ -169,6 +169,15 @@ class Core_Block_Grid_Column_Default extends Core_Attributes
 	public function getValue()
 	{
 		if (null === $this->_value) {
+			if ($this->isFilterable()) {
+				$method = 'get' . str_replace(' ', '', ucwords(str_replace('_', ' ', $this->getName())));
+				if (method_exists($this->getGrid(), $method)) {
+					$options = $this->getGrid()->$method();
+					return $options[$this->_row[$this->getName()]] . " ({$this->_row[$this->getName()]})";
+				}
+				
+			}
+			
 			return $this->_row[$this->getName()];
 		}
 		
