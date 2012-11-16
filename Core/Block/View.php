@@ -845,7 +845,8 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
     			require_once 'Zend/View/Exception.php';
 				$ve = new Zend_View_Exception(implode(" OR\n", $exceptions));
 				$ve->setView($this);
-				throw $ve;
+				//throw $ve;
+				$response .= $ve->getMessage();
     		}
     	}
     	
