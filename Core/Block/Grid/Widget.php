@@ -353,7 +353,7 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		return '';
 	}
 	
-	public function render($name = null)
+	public function render($name)
 	{
 		$class = preg_replace('/[^\p{L}\-]/u', '_', $this->getBlockName());
    		

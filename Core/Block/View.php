@@ -203,7 +203,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	{
 		$response = '';
 		foreach ($this->getBlockChilds($placement) as $child) {
-			$response .= $child->render();
+			$response .= $child->render('DUMMY');
 		}
 		
 		return $response;
@@ -222,7 +222,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 			}
 			
 			foreach ($blocks as $child) {
-				$layout->{$placement} .= $child->render();
+				$layout->{$placement} .= $child->render('DUMMY');
 			}
 		}
 	}
@@ -792,14 +792,14 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
      * @param  string $name overrided script name
      * @return string
      */
-    public function render($name = null)
+    public function render($name)
     {
     	if ($this->isRendered()) {
     		//return '';
     	}
     	
     	$exceptions = array();
-    	if (null !== $name) {
+    	if ('DUMMY' !== $name) {
     		$this->setScriptName($name);
     	}
     	
@@ -809,7 +809,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	    		try {
 	    			$block = Core::getBlock($blockName);
 	    			$block->setScriptName($this->getScriptName());
-	    			return $block->render();
+	    			return $block->render('DUMMY');
 	    		} catch (Exception $e) {
 	    			$exceptions[] = $e->getMessage();
 	    		}
@@ -845,7 +845,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
     			require_once 'Zend/View/Exception.php';
 				$ve = new Zend_View_Exception(implode(" OR\n", $exceptions));
 				$ve->setView($this);
-				throw $ve;
+				//throw $ve;
 				$response .= $ve->getMessage();
     		}
     	}
@@ -861,6 +861,6 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
      */
     public function __toString()
     {
-    	return $this->render(); // REQUIRED by interface
+    	return $this->render('DUMMY'); // REQUIRED by interface
     }
 }

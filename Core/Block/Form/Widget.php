@@ -127,7 +127,7 @@ class Core_Block_Form_Widget extends Core_Block_View
 	 * (non-PHPdoc)
 	 * @see Core_Block_View::render()
 	 */
-	public function render($name = null)
+	public function render($name)
 	{
 		$class  = preg_replace('/[^\p{L}\-]/u', '_', $this->getBlockName());
 		$before = $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);

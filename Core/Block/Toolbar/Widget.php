@@ -181,7 +181,7 @@ class Core_Block_Toolbar_Widget extends Core_Block_View
 		return '<ul class="cbtw-links">' . $links . '</ul>';
 	}
 	
-	public function render($name = null)
+	public function render($name)
 	{
    		$response = '';
    		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);

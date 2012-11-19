@@ -122,7 +122,7 @@ class Core_Block_Pagination_Widget extends Core_Block_View
 		return $this->_partial;
 	}
 	
-	public function render($name = null)
+	public function render($name)
 	{
    		$response = '';
    		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);
