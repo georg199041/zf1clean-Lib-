@@ -2,7 +2,7 @@
 
 require_once "Core/Block/Grid/Column/Default.php";
 
-class Core_Block_Grid_Column_Checkbox extends Core_Block_Grid_Column_Default
+class Core_Block_Grid_Column_Checkbox extends Core_Block_Grid_Column_Formelement
 {
 	protected $_checkedValue = '1';
 	
@@ -47,9 +47,17 @@ class Core_Block_Grid_Column_Checkbox extends Core_Block_Grid_Column_Default
 	public function render()
 	{
 		$name = $this->getName() . '[' . $this->getRow($this->getGrid()->getIdColumnName()) . ']';
-		return $this->getGrid()->formCheckbox($name, $this->getValue(), null, array(
+		
+		$formactionOptions = $this->getFormactionOptions();
+		foreach ($this->getFormactionBind() as $alias => $field) {
+			$formactionOptions[(!is_numeric($alias) ? $alias : $field)] = $this->getRow($field);
+		}
+		
+		$formaction = $this->getGrid()->url($formactionOptions, $this->getFormactionRoute());
+		
+		return $this->getGrid()->formCheckbox($name, $this->getValue(), array('formaction' => $formaction), array(
 			'checkedValue'   => $this->getCheckedValue(),
-			'uncheckedValue' => $this->getUncheckedValue()
+			'uncheckedValue' => $this->getUncheckedValue(),
 		));
 	}
 }
