@@ -326,7 +326,7 @@ class Core_Block_Grid_Widget extends Core_Block_View
 						$position = 'cbgw-columnlast';
 					}
 					
-					$column->setAttribute('class', "cbgw-column {$position} cbgw-column-{$column->getName()}");
+					$column->setAttribute('class', "cbgw-column {$position} cbgw-column__{$column->getName()}");
 					$column->setRow($row);
 					$attribs = $column->toHtmlAttributes();
 					$xhtml .= "<td {$attribs}>{$column->render()}</td>" . PHP_EOL;
