@@ -274,11 +274,13 @@ class Core_Block_Grid_Widget extends Core_Block_View
 				$filter = '';
 				if ($column->isFilterable()) {
 					$value = $filtersValues[$column->getName()];
+					$helper = 'formText';
 					switch ($column->getFilterableType()) {
 						case self::FILTER_LIKE:
 							$filter .= $this->formText('filter[' . $column->getName() . ']', $value, $column->getFilterableOptions());
 							break;
 						case self::FILTER_SELECT:
+							$helper = 'formSelect';
 							$filter .= $this->formSelect('filter[' . $column->getName() . ']', $value, null, $column->getFilterableOptions());
 							break;
 						case self::FILTER_EQUAL:
@@ -295,7 +297,10 @@ class Core_Block_Grid_Widget extends Core_Block_View
 					$position = 'cbgw-columnlast';
 				}
 				
-				$filters .= '<th class="cbgw-filter ' . $position . ' cbgw-filter__' . str_replace('_', '-', $column->getName()) . '">' . $filter . '</th>' . PHP_EOL;
+				$name = str_replace('_', '-', $column->getName());
+				$filters .= '<th class="cbgw-filter ' . $position . ' cbgw-filter__' . $name . '">'
+						 .  '<div class="cbgw-fwrapper cbgw-fwrapper__' . $name . ' cbgw-fwrapper_' . $helper . '">' . $filter . '</div>'
+						 .  '</th>' . PHP_EOL;
 				$j++;
 			}
 			
