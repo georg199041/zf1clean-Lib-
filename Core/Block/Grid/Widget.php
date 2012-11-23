@@ -273,19 +273,37 @@ class Core_Block_Grid_Widget extends Core_Block_View
 			foreach ($this->getColumns() as $column) {
 				$filter = '';
 				if ($column->isFilterable()) {
-					$value = $filtersValues[$column->getName()];
-					$helper = 'formText';
+					$value   = $filtersValues[$column->getName()];
+					$helper  = 'formText';
+					
 					switch ($column->getFilterableType()) {
 						case self::FILTER_LIKE:
-							$filter .= $this->formText('filter[' . $column->getName() . ']', $value, $column->getFilterableOptions());
+							$filter .= $this->formText(
+								'filter[' . $column->getName() . ']',
+								$value,
+								array_merge($column->getFilterableOptions(), array('requested-value' => $value))
+							);
+							
 							break;
 						case self::FILTER_SELECT:
 							$helper = 'formSelect';
-							$filter .= $this->formSelect('filter[' . $column->getName() . ']', $value, null, $column->getFilterableOptions());
+							
+							$filter .= $this->formSelect(
+								'filter[' . $column->getName() . ']',
+								$value,
+								array('requested-value' => $value),
+								$column->getFilterableOptions()
+							);
+							
 							break;
 						case self::FILTER_EQUAL:
 						default:
-							$filter .= $this->formText('filter[' . $column->getName() . ']', $value, $column->getFilterableOptions());
+							$filter .= $this->formText(
+								'filter[' . $column->getName() . ']',
+								$value,
+								array_merge($column->getFilterableOptions(), array('requested-value' => $value))
+							);
+							
 							break;
 					}
 				}

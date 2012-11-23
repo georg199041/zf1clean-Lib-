@@ -102,8 +102,10 @@ class Core_Block_Form_Decorator_CompositeElement extends Zend_Form_Decorator_Abs
 		$input     = $this->buildElement();
 		$errors    = $this->buildErrors();
 		$desc      = $this->buildDescription();
+		$required  = $element->isRequired() ? ' cbfw-element_required' : ' ';
+		$hasErrors = $element->hasErrors() ? ' cbfw-element_error' : ' ';
 	
-		$output = '<div class="cbfw-element cbfw-element__' . str_replace('_', '-', $element->getName()) . ' cbfw-element_' . $element->helper . '">'
+		$output = '<div class="cbfw-element cbfw-element__' . str_replace('_', '-', $element->getName()) . ' cbfw-element_' . $element->helper . $required . $hasErrors . '">'
 		        . $label
 		        . $input
 		        . $errors

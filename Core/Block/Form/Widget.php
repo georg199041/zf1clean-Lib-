@@ -55,7 +55,18 @@ class Core_Block_Form_Widget extends Core_Block_View
 	public function getForm()
 	{
 		if (null === $this->_form) {
-			$this->setForm(new Zend_Form());
+			$form = new Zend_Form();
+			
+			$form->addElementPrefixPath('Core_Block_Form_Decorator', 'Core/Block/Form/Decorator', 'decorator');
+			$form->setElementDecorators(array('CompositeElement'));
+			
+			$form->addDisplayGroupPrefixPath('Core_Block_Form_Decorator', 'Core/Block/Form/Decorator', 'decorator');
+			$form->setDisplayGroupDecorators(array('CompositeGroup'));
+			
+			$form->addPrefixPath('Core_Block_Form_Decorator', 'Core/Block/Form/Decorator', 'decorator');
+			$form->setDecorators(array('CompositeForm'));
+			
+			$this->setForm($form);
 		}
 		
 		return $this->_form;
@@ -137,18 +148,12 @@ class Core_Block_Form_Widget extends Core_Block_View
 			$this->setAttribute('method', $this->getForm()->getMethod());
 			$this->setAttribute('action', $this->getForm()->getAction());
 			
+			$this->getForm()->setDecorators(array('CompositeForm'));
+			$this->getForm()->setDisplayGroupDecorators(array('CompositeGroup'));
+			
 			$endTag = '</form>';
 			$startTag = $this->form($this->getForm()->getName(), $this->getAttributes(), false);
 			$startTag = str_replace($endTag, '', $startTag);
-			
-			$this->getForm()->addElementPrefixPath('Core_Block_Form_Decorator', 'Core/Block/Form/Decorator', 'decorator');
-			$this->getForm()->setElementDecorators(array('CompositeElement'));
-			
-			$this->getForm()->addDisplayGroupPrefixPath('Core_Block_Form_Decorator', 'Core/Block/Form/Decorator', 'decorator');
-			$this->getForm()->setDisplayGroupDecorators(array('CompositeGroup'));
-			
-			$this->getForm()->addPrefixPath('Core_Block_Form_Decorator', 'Core/Block/Form/Decorator', 'decorator');
-			$this->getForm()->setDecorators(array('CompositeForm'));
 			
 			$response = $this->getForm()->render();
 			
