@@ -148,6 +148,10 @@ class Core_Block_Grid_Column_Hyperlink extends Core_Block_Grid_Column_Default
 			$text = $this->getValue();
 		}
 		
+		if ($text=='') {
+			return '<span>нет</span>';
+		}
+		
 		return '<a href="' . $url . '" target="' . $this->getLinkTarget() . '"><span>' . $text . '</span></a>';
 	}
 }
