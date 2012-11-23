@@ -21,6 +21,7 @@ class Core_Block_Form_Decorator_CombinedElement extends Core_Block_Form_Decorato
 		
 		foreach ($this->_combinedButtons as $name => $btn) {
 			$label = $btn['label'];
+			$type  = $btn['type'] != '' ? $btn['type'] : 'button';
 			unset($btn['class'], $btn['type'], $btn['label']);
 			
 			$attribs = '';
@@ -28,7 +29,7 @@ class Core_Block_Form_Decorator_CombinedElement extends Core_Block_Form_Decorato
 				$attribs .= " {$aname}=\"{$attr}\"";
 			}
 			
-			$xhtml .= '<button class="btn cbfw-tag-addbtn-' . str_replace('_', '-', $el->getName()) . '__' . $name . '" type="button"' . $attribs . '>' . $label . '</button>';
+			$xhtml .= '<button class="btn cbfw-tag-addbtn-' . str_replace('_', '-', $el->getName()) . '__' . $name . '" type="' . $type . '"' . $attribs . '>' . $label . '</button>';
 		}
 		
 		return $xhtml;
