@@ -174,7 +174,7 @@ class Core_Block_Grid_Column_Default extends Core_Attributes
 				if (method_exists($this->getGrid(), $method)) {
 					$options = $this->getGrid()->$method();
 					if ($this->_row[$this->getName()]) {
-						return $options[$this->_row[$this->getName()]] . " ({$this->_row[$this->getName()]})";
+						return ltrim($options[$this->_row[$this->getName()]], '- ') . " ({$this->_row[$this->getName()]})";
 					} else {
 						return '';
 					}
