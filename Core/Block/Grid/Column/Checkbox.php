@@ -58,7 +58,8 @@ class Core_Block_Grid_Column_Checkbox extends Core_Block_Grid_Column_Formelement
 		return '<span class="cbgw-column_formCheckbox">' . $this->getGrid()->formCheckbox(
 			$name,
 			$this->getValue(),
-			array('formaction' => $formaction), array(
+			array('formaction' => $formaction),
+			array(
 				'checkedValue'   => $this->getCheckedValue(),
 				'uncheckedValue' => $this->getUncheckedValue(),
 			)

@@ -30,10 +30,18 @@ class Core_Block_Grid_Column_Select extends Core_Block_Grid_Column_Formelement
 	public function render()
 	{
 		$name = $this->getName() . '[' . $this->getRow($this->getGrid()->getIdColumnName()) . ']';
+		
+		$formactionOptions = $this->getFormactionOptions();
+		foreach ($this->getFormactionBind() as $alias => $field) {
+			$formactionOptions[(!is_numeric($alias) ? $alias : $field)] = $this->getRow($field);
+		}
+		
+		$formaction = $this->getGrid()->url($formactionOptions, $this->getFormactionRoute());
+		
 		return '<span class="cbgw-column_formSelect">' . $this->getGrid()->formSelect(
 			$name,
 			$this->getValue(),
-			$this->getAttributes(),
+			array('formaction' => $formaction),
 			$this->getSelectOptions()
 		) . '</span>';
 	}
