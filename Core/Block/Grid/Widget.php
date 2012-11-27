@@ -208,7 +208,10 @@ class Core_Block_Grid_Widget extends Core_Block_View
 			if ($column->isFilterable()) {
 				$value = $this->getRequest()->getParam('filter_' . $column->getName());
 				if (null !== $value) {
-					$filterValues[$column->getName()] = $value;
+					$filterValues[$column->getName()] = array(
+						'type'  => $column->getFilterableType(),
+						'value' => $value
+					);
 				}
 			}
 		}
