@@ -1,8 +1,8 @@
 <?php
 
-require_once "Core/Block/Grid/Column/Default.php";
+require_once "Core/Block/Grid/Column/Formelement.php";
 
-class Core_Block_Grid_Column_Select extends Core_Block_Grid_Column_Default
+class Core_Block_Grid_Column_Select extends Core_Block_Grid_Column_Formelement
 {
 	protected $_selectOptions = array();
 
@@ -33,7 +33,7 @@ class Core_Block_Grid_Column_Select extends Core_Block_Grid_Column_Default
 		return $this->getGrid()->formSelect(
 			$name,
 			$this->getValue(),
-			$this->getAttribs(),
+			$this->getAttributes(),
 			$this->getSelectOptions()
 		);
 	}

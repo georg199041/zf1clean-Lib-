@@ -269,6 +269,15 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		if ($hasFilters) {
 			$filters = '';
 			$filtersValues = (array) $request->getParam('filter');
+			
+			$params = $request->getParams();
+			foreach ($params as $fname => $param) {
+				if ('filter[' == substr($fname, 0, 7)) {
+					$fname = trim(substr($fname, 7), '[]');
+					$filtersValues[$fname] = $param;
+				}
+			}
+			
 			$j = 0;
 			foreach ($this->getColumns() as $column) {
 				$filter = '';

@@ -134,9 +134,9 @@ class Core_Block_Grid_Column_Hyperlink extends Core_Block_Grid_Column_Default
 		$url = $this->getLinkStaticUrl();
 		if (null === $url) {
 			$urlOptions = $this->getLinkOptions();
-			foreach ($this->getLinkBindFields() as $field) {
+			foreach ($this->getLinkBindFields() as $alias => $field) {
 				if (null !== $this->getRow($field)) {
-					$urlOptions[$field] = $this->getRow($field);
+					$urlOptions[(!is_numeric($alias) ? $alias : $field)] = $this->getRow($field);
 				}
 			}
 			
