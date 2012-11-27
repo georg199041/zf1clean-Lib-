@@ -30,11 +30,11 @@ class Core_Block_Grid_Column_Select extends Core_Block_Grid_Column_Formelement
 	public function render()
 	{
 		$name = $this->getName() . '[' . $this->getRow($this->getGrid()->getIdColumnName()) . ']';
-		return $this->getGrid()->formSelect(
+		return '<span class="cbgw-column_formSelect">' . $this->getGrid()->formSelect(
 			$name,
 			$this->getValue(),
 			$this->getAttributes(),
 			$this->getSelectOptions()
-		);
+		) . '</span>';
 	}
 }
