@@ -14,7 +14,7 @@ require_once "Core/Image/Adapter/Abstract.php";
  * @package    Core_Image
  * @version    2.3
  * @subpackage Helper
- * @copyright  Copyright (c) 2012 SunNY Creative Technologies. (http://www.sunny.net)
+ * @copyright  Copyright (c) 2005-2009 SunNY Creative Technologies. (http://www.sunny.net)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Core_Image_View_Helper_Image extends Zend_View_Helper_Abstract
@@ -56,7 +56,7 @@ class Core_Image_View_Helper_Image extends Zend_View_Helper_Abstract
 		try {
 			$this->_image = Core_Image_Factory::load($path);
 		} catch (Exception $e) {
-			$this->_exception = $e;
+			$this->_image = Core_Image_Factory::load('/theme/img/front/noimage.png');
 		}
 		
 		return $this;

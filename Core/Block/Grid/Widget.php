@@ -201,6 +201,21 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		return $this->_routeName;
 	}
 	
+	public function getFilterValues()
+	{
+		$filterValues = array();
+		foreach ($this->getColumns() as $column) {
+			if ($column->isFilterable()) {
+				$value = $this->getRequest()->getParam('filter_' . $column->getName());
+				if (null !== $value) {
+					$filterValues[$column->getName()] = $value;
+				}
+			}
+		}
+		
+		return $filterValues;
+	}
+	
 	protected function _renderColAttribs()
 	{
 		$xhtml = '';
@@ -267,28 +282,33 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		$xhtml .= '</tr>';
 		
 		if ($hasFilters) {
-			$filters = '';
-			$filtersValues = (array) $request->getParam('filter');
+			// Check request
+			$original  = $this->url($request->getParams());
+			$requested = $this->url(array_merge(array(
+				'module'     => $request->getModuleName(),
+				'controller' => $request->getControllerName(),
+				'action'     => $request->getActionName(),
+			), $request->getPost()), null, true);
 			
-			$params = $request->getParams();
-			foreach ($params as $fname => $param) {
-				if ('filter[' == substr($fname, 0, 7)) {
-					$fname = trim(substr($fname, 7), '[]');
-					$filtersValues[$fname] = $param;
-				}
+			if ($request->isPost() && $request->getPathInfo() != $requested) {
+				Zend_Controller_Action_HelperBroker::getStaticHelper('Redirector')->gotoUrlAndExit($requested);
 			}
 			
+			// render
+			$filters = '';
+			$filtersValues = (array) $request->getParams();
+						
 			$j = 0;
 			foreach ($this->getColumns() as $column) {
 				$filter = '';
 				if ($column->isFilterable()) {
-					$value   = $filtersValues[$column->getName()];
+					$value   = $filtersValues['filter_' . $column->getName()];
 					$helper  = 'formText';
 					
 					switch ($column->getFilterableType()) {
 						case self::FILTER_LIKE:
 							$filter .= $this->formText(
-								'filter[' . $column->getName() . ']',
+								'filter_' . $column->getName(),
 								$value,
 								array_merge($column->getFilterableOptions(), array('requested-value' => $value))
 							);
@@ -298,7 +318,7 @@ class Core_Block_Grid_Widget extends Core_Block_View
 							$helper = 'formSelect';
 							
 							$filter .= $this->formSelect(
-								'filter[' . $column->getName() . ']',
+								'filter_' . $column->getName(),
 								$value,
 								array('requested-value' => $value),
 								$column->getFilterableOptions()
@@ -308,7 +328,7 @@ class Core_Block_Grid_Widget extends Core_Block_View
 						case self::FILTER_EQUAL:
 						default:
 							$filter .= $this->formText(
-								'filter[' . $column->getName() . ']',
+								'filter_' . $column->getName(),
 								$value,
 								array_merge($column->getFilterableOptions(), array('requested-value' => $value))
 							);
@@ -405,7 +425,7 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		
 		$post = $this->_renderBlocks(self::BLOCK_PLACEMENT_AFTER);
 		
-		return '<div class="cbgw-block cbgw-block-' . $class . '" action="' . $this->url($this->getRouteOptions(), $this->getRouteName()) . '">'
+		return '<div class="cbgw-block cbgw-block-' . $class . '" action="' . $this->url($this->getRouteOptions(), $this->getRouteName(), true, true) . '">'
     		 . $pre . $response . $post
     		 . '</div>';
 	}

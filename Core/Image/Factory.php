@@ -8,7 +8,7 @@
  * @package    Core_Image
  * @version    2.3
  * @subpackage Factory
- * @copyright  Copyright (c) 2012 SunNY Creative Technologies. (http://www.sunny.net)
+ * @copyright  Copyright (c) 2005-2009 SunNY Creative Technologies. (http://www.sunny.net)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Core_Image_Factory
@@ -38,6 +38,7 @@ class Core_Image_Factory
 	{
 		$filename = ltrim($path, '/');
 		$ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+		
 		if (file_exists($filename)) {
 			if (!array_key_exists($ext, self::$_extToAdapterMap)) {
 				throw new Exception("Adapter for '$ext' type of image unavailable", 500);

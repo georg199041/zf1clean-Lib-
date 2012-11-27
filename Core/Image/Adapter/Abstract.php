@@ -8,7 +8,7 @@
  * @package    Core_Image
  * @version    2.3
  * @subpackage Abstract
- * @copyright  Copyright (c) 2012 SunNY Creative Technologies. (http://www.sunny.net)
+ * @copyright  Copyright (c) 2005-2009 SunNY Creative Technologies. (http://www.sunny.net)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 abstract class Core_Image_Adapter_Abstract
@@ -112,6 +112,11 @@ abstract class Core_Image_Adapter_Abstract
 	protected $_compression = 85;
 	
 	/**
+	 * @var integer
+	 */
+	protected static $_lifeTime = 2592000;
+	
+	/**
 	 * Load image from file (specified in extension)
 	 * 
 	 * @param  string $filename Path to file
@@ -167,7 +172,7 @@ abstract class Core_Image_Adapter_Abstract
 		
 		$resource = $this->_load($filename);
 		if (false === $resource) {
-			throw new Exception("Cann't load file '$filename'", 500);
+			throw new Exception("Can't load file '$filename'", 500);
 		}
 		
 		$this->_resource = $resource;
@@ -257,6 +262,28 @@ abstract class Core_Image_Adapter_Abstract
 	{
 		$this->_transparensyPreserved = (bool) $flag;
 		return $this;
+	}
+	
+	/**
+     * Set time before die of image
+ 	 *
+ 	 * @param  integer $value
+ 	 */
+	public function setLifeTime($value)
+	{
+		self::$_lifeTime = (int) $value;
+		return $this;
+	}
+	
+	
+	/**
+	 * Get time before die of image
+	 *
+	 * @return  integer $value
+	 */
+	public function getLifeTime()
+	{
+		return self::$_lifeTime;
 	}
 
 	/**
@@ -656,7 +683,17 @@ abstract class Core_Image_Adapter_Abstract
 			return $this;
 		}
 		
+		if (null !== $savePath) {
+			$this->setSavePath($savePath);
+		}
+		
 		$this->setMethod(array('name' => __FUNCTION__, $this->getNewWidth(), $this->getNewHeight()));
+		
+		if (is_file($this->getSavePath()) && filemtime($this->getSavePath()) <= $this->_lifeTime) {
+			$this->reset();
+			return $this;
+		}
+		
 		$resource = $this->createBlank();
 		
 		imagecopyresampled(
@@ -765,7 +802,21 @@ abstract class Core_Image_Adapter_Abstract
 			return $this;
 		}
 		
+		
+		if (null !== $savePath) {
+			$this->setSavePath($savePath);
+		}
+		
 		$this->setMethod(array('name' => __FUNCTION__, $width, $height));
+		
+		if (is_file($this->getSavePath()) && filemtime($this->getSavePath()) <= $this->_lifeTime) {
+			$this->reset();
+			return $this;
+		}
+		
+		
+		
+		
 		$resource = $this->createBlank();
 		
 		// AR > 1: horisontal; AR < 1: vertical;
@@ -855,7 +906,18 @@ abstract class Core_Image_Adapter_Abstract
 			return $this;
 		}
 		
+		
+		if (null !== $savePath) {
+			$this->setSavePath($savePath);
+		}
+		
 		$this->setMethod(array('name' => __FUNCTION__, $width, $height));
+		
+		if (is_file($this->getSavePath()) && filemtime($this->getSavePath()) <= $this->_lifeTime) {
+			$this->reset();
+			return $this;
+		}
+		
 		$resource = $this->createBlank();
 		
 		// AR > 1: horisontal; AR < 1: vertical;
