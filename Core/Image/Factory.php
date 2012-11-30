@@ -8,7 +8,7 @@
  * @package    Core_Image
  * @version    2.3
  * @subpackage Factory
- * @copyright  Copyright (c) 2005-2009 SunNY Creative Technologies. (http://www.sunny.net)
+ * @copyright  Copyright (c) 2005-2009 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Core_Image_Factory
