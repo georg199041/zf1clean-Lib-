@@ -37,6 +37,13 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	protected static $_cache;
 	
 	/**
+	 * Cache enabledflag
+	 * 
+	 * @var boolean
+	 */
+	protected $_useCache = false;
+	
+	/**
 	 * Template script name
 	 * 
 	 * @var string
@@ -666,6 +673,30 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
     	return self::$_cache;
     }
     
+    public function setUseCache($flag = true)
+    {
+    	$this->_useCache = (bool) $flag;
+    	return $this;
+    }
+    
+    public function isUseCache()
+    {
+    	return $this->_useCache;
+    }
+    
+    public function getCacheId(Core_Block_View $block)
+    {
+    	//return get_class($block);
+    	$parts = explode('/', $block->getBlockName());
+    	$namespace = Core::useFilter($parts[0], 'Zend_Filter_Word_DashToCamelCase');
+    	$parts[0] = 'Block';
+    	foreach ($parts as &$part) {
+    		$part = Core::useFilter($part, 'Zend_Filter_Word_DashToCamelCase');
+    	}
+    	
+    	return $namespace . '_' . implode('_', $parts);
+    }
+    
     /**
      * Proxy undefined methods to engine
      * 
@@ -822,8 +853,9 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
    		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);
    		
    		try {
-   			if (null !== self::getCache() && self::getCache()->test($this->getBlockName())) {
-   				$script = self::getCache()->load($this->getBlockName());
+   			$cacheId = $this->getCacheId($this);
+   			if (null !== self::getCache() && $this->isUseCache() && self::getCache()->test($cacheId)) {
+   				$script = self::getCache()->load($cacheId);
    			} else {
 	   			$file = $this->_getScriptFile();
 	   			$this->preRender();
@@ -833,8 +865,8 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	    		$script = ob_get_clean();
 	    		
 	    		$this->setRendered(true);
-	    		if (null !== self::getCache()) {
-	    			self::getCache()->save($script, $this->getBlockName());
+	    		if (null !== self::getCache() && $this->isUseCache()) {
+	    			self::getCache()->save($script, $cacheId);
 	    		}
    			}
    			
