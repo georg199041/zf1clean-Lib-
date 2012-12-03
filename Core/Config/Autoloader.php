@@ -13,17 +13,27 @@ class Core_Config_Autoloader
 		
 		foreach (new RecursiveIteratorIterator($iterator) as $file) {
 			foreach ($rules as $rule) {
+				//$rulesFinded[$rule] = array();
 				if (preg_match($rule, $file)) {
 					$rulesFinded[$rule][] = $file->getPathname();
 				}
 			}
 		}
-		
+
+		foreach ($rulesFinded as $rule => &$list) {
+			if (empty($rulesFinded[$rule])) {
+				unset($rulesFinded[$rule]);
+			} else {
+				asort($list);
+			}
+		}
+		//echo '<br><br><br><br><br>';
 		$config = array();
 		foreach ($rules as $rule) {
 			if (array_key_exists($rule, $rulesFinded)) {
 				foreach ($rulesFinded[$rule] as $path) {
-					$configAdd = include $path;
+					//echo $path . '<br>';
+					$configAdd = require $path;
 					if (is_array($configAdd)) {
 						$config = self::mergeArray($config, $configAdd);
 					}
