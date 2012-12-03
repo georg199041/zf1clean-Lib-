@@ -39,4 +39,25 @@ class Core_Cache_Manager extends Zend_Cache_Manager
 	{
 		return $this->_optionTemplates;
 	}
+	
+	public function getCache($name)
+	{
+		$cache = parent::getCache($name);
+		if ($cache instanceof Zend_Cache_Core) {
+			$r = new Zend_Reflection_Class($cache);
+			$p = $r->getProperty('_options');
+			$p->setAccessible(true);
+			$options = $p->getValue($cache);
+			if (!array_key_exists('label', $options)) {
+				$options['label'] = ucwords($name);
+				$template = (array) $this->getCacheTemplate($name);
+				if (!empty($template['frontend']['options']['label'])) {
+					$options['label'] = (string) $template['frontend']['options']['label'];
+				}
+			}
+			$p->setValue($cache, $options);
+		}
+		
+		return $cache;
+	}
 }
