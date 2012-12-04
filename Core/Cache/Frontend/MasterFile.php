@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Zend Framework
  *
@@ -16,25 +15,23 @@
  * @category   Core
  * @package    Core_Cache
  * @subpackage Core_Cache_Frontend
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @version    $Id: MasterFile.php 24218 2011-07-10 01:22:58Z ramon $
  */
 
-
 /**
  * @see Zend_Cache_Core
  */
-require_once 'Zend/Cache/Core.php';
-
+require_once 'Zend/Cache/Frontend/File.php';
 
 /**
  * @package    Core_Cache
  * @subpackage Core_Cache_Frontend
- * @copyright  Copyright (c) 2005-2011 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Core_Cache_Frontend_MasterFile extends Zend_Cache_Frontend_File
+class Core_Cache_Frontend_MasterFile extends Zend_Cache_Frontend_File //TODO
 {
     /**
      * Constructor
