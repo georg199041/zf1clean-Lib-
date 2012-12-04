@@ -82,8 +82,14 @@ class Core_Cache_Frontend_MasterFile extends Zend_Cache_Core
 		}
 		
 		$this->_log(__CLASS__ . ": test item '{$id}'", Zend_Log::DEBUG);
-		$hash = $this->getIdHash($id);
-		return $this->getBackend()->test($hash);
+		$id    = ltrim($id, '/\\');
+		$hash  = $this->getIdHash($id);
+		$mtime = $this->getBackend()->test($hash);
+		if ($mtime < filemtime($id)) {
+			return false;
+		}
+		
+		return $mtime;
 	}
 	
 	/**
