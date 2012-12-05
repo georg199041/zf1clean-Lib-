@@ -49,19 +49,6 @@ class Core_Image_Cache_Frontend_Image extends Zend_Cache_Core
     }
     
     /**
-     * Get hash of specified file path id
-     * 
-     * @param  string $id Cache id (path)
-     * @return string     String converted with md5() function
-     */
-	public function getIdHash($id)
-    {
-    	$id   = ltrim($id, '/\\');
-    	$info = pathinfo($id);
-    	return md5($info['dirname'] . DIRECTORY_SEPARATOR . $info['filename']) . '.' . $info['extension'];
-    }
-    
-    /**
      * Get cache backend and check instance of it
      * 
      * @throws Core_Image_Cache_Exception
@@ -91,6 +78,9 @@ class Core_Image_Cache_Frontend_Image extends Zend_Cache_Core
 		if (!$this->getOption('caching')) {
 			return false;
 		}
+
+		// clean path
+		$id = $this->_path($id);
 		
 		$this->_log(__CLASS__ . ": load image '{$id}' cache", Zend_Log::DEBUG);
 		return $this->getBackend()->load($id);
@@ -183,6 +173,9 @@ class Core_Image_Cache_Frontend_Image extends Zend_Cache_Core
 		if (!$this->getOption('caching')) {
 			return true;
 		}
+		
+		// clean path
+		$id = $this->_path($id);
 		
 		// debug
 		$this->_log(__CLASS__ . ": remove image '{$id}' cache", Zend_Log::DEBUG);

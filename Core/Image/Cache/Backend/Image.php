@@ -62,7 +62,7 @@ class Core_Image_Cache_Backend_Image extends Zend_Cache_Backend implements Zend_
 	{
 		$return = @file_get_contents($path . '.metadata');
 		if (false !== $return) {
-			return unserialize($return);
+			return @unserialize($return);
 		}
 		
 		return false;
@@ -97,7 +97,7 @@ class Core_Image_Cache_Backend_Image extends Zend_Cache_Backend implements Zend_
 		
 		// info 
 		$info = new SplFileInfo($id);
-		return $this->getOption('cache_dir') . DIRECTORY_SEPARATOR . $this->_savePath($info);
+		return $this->getOption('cache_dir') . '/' . $this->_savePath($info);
 	}
 
 	/**
@@ -115,7 +115,7 @@ class Core_Image_Cache_Backend_Image extends Zend_Cache_Backend implements Zend_
 		
 		// info 
 		$info     = new SplFileInfo($id);
-		$savePath = $this->getOption('cache_dir') . DIRECTORY_SEPARATOR . $this->_savePath($info);
+		$savePath = $this->getOption('cache_dir') . '/' . $this->_savePath($info);
 		
 		// check cache exists
 		if (file_exists($savePath) && is_file($savePath)) {
@@ -165,7 +165,7 @@ class Core_Image_Cache_Backend_Image extends Zend_Cache_Backend implements Zend_
 		}
 		
 		// prepend set of save path
-		$savePath = $this->getOption('cache_dir') . DIRECTORY_SEPARATOR . $this->_savePath($info);
+		$savePath = $this->getOption('cache_dir') . '/' . $this->_savePath($info);
 		array_unshift($imageProcessing, array('method' => 'setSavePath', 'arguments' => array($savePath)));
 		
 		// try to save metadata
@@ -175,7 +175,7 @@ class Core_Image_Cache_Backend_Image extends Zend_Cache_Backend implements Zend_
 		}
 		
 		// save image and return path if success
-		try {var_dump($imageProcessing);
+		try {
 			$image = call_user_func_array(array('Core_Image_Factory', 'load'), array($data, $imageProcessing));
 			return $image->getPath();
 		} catch (Exception $e) {
@@ -197,7 +197,7 @@ class Core_Image_Cache_Backend_Image extends Zend_Cache_Backend implements Zend_
 		
 		// info
 		$info     = new SplFileInfo($id);		
-		$savePath = $this->getOption('cache_dir') . DIRECTORY_SEPARATOR . $this->_savePath($info);
+		$savePath = $this->getOption('cache_dir') . '/' . $this->_savePath($info);
 		
 		// del cache
 		if (!is_file($savePath) || !@unlink($savePath)) {
