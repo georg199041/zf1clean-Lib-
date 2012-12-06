@@ -228,7 +228,7 @@ class Core_Image_Cache_Backend_Image extends Zend_Cache_Backend implements Zend_
 		
 		// clean available methods
 		if ($mode == Zend_Cache::CLEANING_MODE_ALL || $mode == Zend_Cache::CLEANING_MODE_OLD) {
-			$dir = new DirectoryIterator($this->getCacheDir());
+			$dir = new DirectoryIterator($this->getOption('cache_dir'));
 			foreach ($dir as $file) {
 				if (!$file->isFile()) {
 					// if not a file do nothing
