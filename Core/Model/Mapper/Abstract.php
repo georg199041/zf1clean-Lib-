@@ -568,7 +568,7 @@ abstract class Core_Model_Mapper_Abstract
 	 */
 	public function pageToOffset($count = null, $page = null)
 	{
-		return (null !== $count && null !== $page) ? $count * $page - $page : null;
+		return (null !== $count && null !== $page) ? $count * $page - $count : null;
 	}
 	
 	/**
