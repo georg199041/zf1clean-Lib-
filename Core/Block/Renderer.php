@@ -53,11 +53,69 @@ class Core_Block_Renderer implements Zend_View_Interface
 	const BLOCK_RENDER_TYPE_XML  = 'xml';
 	
 	/**
+	 * Request types constants
+	 */
+	const BLOCK_REQUEST_TYPE_XHR    = 'XmlHttpRequest';
+	const BLOCK_REQUEST_TYPE_FLASH  = 'FlashRequest';
+	const BLOCK_REQUEST_TYPE_POST   = 'POST';
+	const BLOCK_REQUEST_TYPE_GET    = 'GET';
+	const BLOCK_REQUEST_TYPE_PUT    = 'PUT';
+	const BLOCK_REQUEST_TYPE_DELETE = 'DELETE';
+	
+	/**
 	 * Global protected render engine container
 	 * 
 	 * @var object
 	 */
 	protected static $_engine;
+	
+	/**
+	 * Render types array for comparsions
+	 * 
+	 * @var array
+	 */
+	protected $_renderTypes = array(
+		self::BLOCK_RENDER_TYPE_HTML,
+		self::BLOCK_RENDER_TYPE_JSON,
+		self::BLOCK_RENDER_TYPE_XML
+	);
+	
+	/**
+	 * Request types array for compasions
+	 * 
+	 * @var array
+	 */
+	protected $_requestTypes = array(
+		self::BLOCK_REQUEST_TYPE_XHR,
+		self::BLOCK_REQUEST_TYPE_FLASH,
+		self::BLOCK_REQUEST_TYPE_POST,
+		self::BLOCK_REQUEST_TYPE_GET,
+		self::BLOCK_REQUEST_TYPE_PUT,
+		self::BLOCK_REQUEST_TYPE_DELETE,
+	);
+	
+	/**
+	 * Global block default request to render type map
+	 * 
+	 * @var array
+	 */
+	protected static $_defaultRequestRenderTypes = array(
+		self::BLOCK_REQUEST_TYPE_XHR    => self::BLOCK_RENDER_TYPE_JSON,
+		self::BLOCK_REQUEST_TYPE_FLASH  => self::BLOCK_RENDER_TYPE_JSON,
+		self::BLOCK_REQUEST_TYPE_POST   => self::BLOCK_RENDER_TYPE_HTML,
+		self::BLOCK_REQUEST_TYPE_GET    => self::BLOCK_RENDER_TYPE_HTML,
+		self::BLOCK_REQUEST_TYPE_PUT    => self::BLOCK_RENDER_TYPE_HTML,
+		self::BLOCK_REQUEST_TYPE_DELETE => self::BLOCK_RENDER_TYPE_HTML,
+	);
+	
+	/**
+	 * Current block request to render type map
+	 * 
+	 * @var array
+	 */
+	protected $_requestRenderTypes = array();
+	
+	protected static $_defaultCacheEnabling = array();
 	
     /**
      * Strict variables flag; when on, undefined variables accessed in the view
@@ -66,23 +124,6 @@ class Core_Block_Renderer implements Zend_View_Interface
      * @var boolean
      */
 	protected $_strictVars = false;
-	
-	/**
-	 * Render method selection by request map
-	 * 
-	 * @var array
-	 */
-	protected $_renderMap = array(
-	    'isPost'           => self::BLOCK_RENDER_TYPE_HTML,
-		'isGet'            => self::BLOCK_RENDER_TYPE_HTML,
-		'isPut'            => self::BLOCK_RENDER_TYPE_HTML,
-		'isDelete'         => self::BLOCK_RENDER_TYPE_HTML,
-		'isHead'           => self::BLOCK_RENDER_TYPE_HTML,
-		'isOptions'        => self::BLOCK_RENDER_TYPE_HTML,
-		'isXmlHttpRequest' => self::BLOCK_RENDER_TYPE_JSON,
-		'isFlashRequest'   => self::BLOCK_RENDER_TYPE_JSON,
-		'isSecure'         => self::BLOCK_RENDER_TYPE_HTML,
-	);
 	
 	// TODO: ? cache to request method enabling map ?
 	
@@ -250,6 +291,108 @@ class Core_Block_Renderer implements Zend_View_Interface
 	public function isCached()
 	{
 		return $this->_cached;
+	}
+	
+	/**
+	 * Setup default request to render type map definition
+	 * 
+	 * @param  array|string $spec   Array of key => value pairs defaults or sring key of specified request type
+	 * @param  string       $value  Value for single type setting
+	 * @throws Core_Block_Exception Thrown when definition is not an array or sring and $value pair
+	 * @return Core_Block_Renderer
+	 */
+	public function setDefaultRequestRenderType($spec, $value = null)
+	{
+		if (is_array($spec)) {
+			foreach ($spec as $key => $val) {
+				if (in_array($key, $this->_requestTypes) && in_array($val, $this->_renderTypes)) {
+					self::$_defaultRequestRenderTypes[$key] = $val;
+				}
+			}
+		} else if (in_array($spec, $this->_requestTypes) && in_array($value, $this->_renderTypes)) {
+			self::$_defaultRequestRenderTypes[$spec] = $value;
+		} else {
+			require_once 'Core/Block/Exception.php';
+			$e = new Core_Block_Exception("Invalid default request render type(s) definition passed, must be an array or key => value pair");
+			$e->setView($this);
+			throw $e;
+		}
+		
+		return $this;
+	}
+	
+	/**
+	 * If $type is passed try to get render type for specified request type
+	 * Else if request type not found return default render type
+	 * Else return all map
+	 * 
+	 * @param  string $type Request type
+	 * @return array|string Default render type for request type or all map
+	 */
+	public function getDefaultRequestRenderType($type = null)
+	{
+		if (null !== $type) {
+			if (array_key_exists($type, self::$_defaultRequestRenderTypes)) {
+				return self::$_defaultRequestRenderTypes[$type];
+			}
+			
+			return self::BLOCK_RENDER_TYPE_HTML;
+		}
+		
+		return self::$_defaultRequestRenderTypes;
+	}
+	
+	/**
+	 * Setup request to render type map definition
+	 * 
+	 * @param  array|string $spec   Array of key => value pairs defaults or sring key of specified request type
+	 * @param  string       $value  Value for single type setting
+	 * @throws Core_Block_Exception Thrown when definition is not an array or sring and $value pair
+	 * @return Core_Block_Renderer
+	 */
+	public function setRequestRenderType($spec, $value = null)
+	{
+		if (is_array($spec)) {
+			foreach ($spec as $key => $val) {
+				if (in_array($key, $this->_requestTypes) && in_array($val, $this->_renderTypes)) {
+					$this->_requestRenderTypes[$key] = $val;
+				}
+			}
+		} else if (in_array($spec, $this->_requestTypes) && in_array($value, $this->_renderTypes)) {
+			$this->_requestRenderTypes[$spec] = $value;
+		} else {
+			require_once 'Core/Block/Exception.php';
+			$e = new Core_Block_Exception("Invalid request render type(s) definition passed, must be an array or key => value pair");
+			$e->setView($this);
+			throw $e;
+		}
+		
+		return $this;		
+	}
+	
+	/**
+	 * If $type is passed try to get render type for specified request type
+	 * Else if request type not found return default render type
+	 * Else return all map
+	 * 
+	 * @param  string $type Request type
+	 * @return array|string Default render type for request type or all map
+	 */
+	public function getRequestRenderType($type = null)
+	{
+		if (null !== $type) {
+			if (array_key_exists($type, $this->_requestTypes)) {
+				if (!array_key_exists($type, $this->_requestRenderTypes)) {
+					$this->setRequestRenderType($type, $this->getDefaultRequestRenderType($type));
+				}
+				
+				return $this->_requestRenderTypes[$type];
+			}
+				
+			return self::BLOCK_RENDER_TYPE_HTML;
+		}
+		
+		return $this->_requestRenderTypes;
 	}
 	
 	/**
