@@ -115,7 +115,45 @@ class Core_Block_Renderer implements Zend_View_Interface
 	 */
 	protected $_requestRenderTypes = array();
 	
-	protected static $_defaultCacheEnabling = array();
+	/**
+	 * Cache defaults enable by request type map 
+	 * 
+	 * @var unknown_type
+	 */
+	protected static $_defaultCacheEnable = array(
+		self::BLOCK_REQUEST_TYPE_XHR => array(
+			self::BLOCK_RENDER_TYPE_HTML => false,
+			self::BLOCK_RENDER_TYPE_JSON => false,
+			self::BLOCK_RENDER_TYPE_XML  => false,
+		),
+		self::BLOCK_REQUEST_TYPE_FLASH => array(
+			self::BLOCK_RENDER_TYPE_HTML => false,
+			self::BLOCK_RENDER_TYPE_JSON => false,
+			self::BLOCK_RENDER_TYPE_XML  => false,
+		),
+		self::BLOCK_REQUEST_TYPE_POST => array(
+			self::BLOCK_RENDER_TYPE_HTML => false,
+			self::BLOCK_RENDER_TYPE_JSON => false,
+			self::BLOCK_RENDER_TYPE_XML  => false,
+		),
+		self::BLOCK_REQUEST_TYPE_GET => array(
+			self::BLOCK_RENDER_TYPE_HTML => false,
+			self::BLOCK_RENDER_TYPE_JSON => false,
+			self::BLOCK_RENDER_TYPE_XML  => false,
+		),
+		self::BLOCK_REQUEST_TYPE_PUT => array(
+			self::BLOCK_RENDER_TYPE_HTML => false,
+			self::BLOCK_RENDER_TYPE_JSON => false,
+			self::BLOCK_RENDER_TYPE_XML  => false,
+		),
+		self::BLOCK_REQUEST_TYPE_DELETE => array(
+			self::BLOCK_RENDER_TYPE_HTML => false,
+			self::BLOCK_RENDER_TYPE_JSON => false,
+			self::BLOCK_RENDER_TYPE_XML  => false,
+		),
+	);
+	
+	protected $_cacheEnable = array();
 	
     /**
      * Strict variables flag; when on, undefined variables accessed in the view
@@ -133,13 +171,6 @@ class Core_Block_Renderer implements Zend_View_Interface
 	 * @var Zend_Cache_Core
 	 */
 	protected $_cache;
-	
-	/**
-	 * Cache enable flag
-	 * 
-	 * @var boolean
-	 */
-	protected $_cached = false;
 	
 	/**
 	 * Logger object
@@ -175,7 +206,7 @@ class Core_Block_Renderer implements Zend_View_Interface
 	 * @param  string Log message level (warning, error, etc...)
 	 * @return Core_Block_Renderer
 	 */
-	protected function _log($message, $priority = 4)
+	protected function _log($message, $priority = Zend_Log::DEBUG)
 	{
 		if (!$this->isLogging()) {
 			return $this;
@@ -190,6 +221,42 @@ class Core_Block_Renderer implements Zend_View_Interface
 		$e = new Core_Block_Exception('Logging is enabled but logger is not set');
 		$e->setView($this);
 		throw $e;
+	}
+	
+	/**
+	 * Generate cache id string
+	 *
+	 * @return string
+	 */
+	protected function _getCacheId(Core_Block_Renderer $block)
+	{
+		$parts = explode('/', $block->getBlockName());
+		$namespace = Core::useFilter($parts[0], 'Zend_Filter_Word_DashToCamelCase');
+		$parts[0] = 'Block';
+		foreach ($parts as &$part) {
+			$part = Core::useFilter($part, 'Zend_Filter_Word_DashToCamelCase');
+		}
+		 
+		return $namespace . '_' . implode('_', $parts);
+	}	
+	
+	/**
+	 * Constructor
+	 * 
+	 * @param array|Zend_Config $options
+	 */
+	public function __construct($options = null)
+	{
+		if (is_array($options)) {
+			$this->setOptions($options);
+		} else if ($options instanceof Zend_Config) {
+			$this->setOptions($options->toArray());
+		}
+	
+		$this->getEngine()->addHelperPath('Core/Block/View/Helper', 'Core_Block_View_Helper');
+		$this->_log("Block '{$this->getBlockName()}' constructor passed", Zend_Log::DEBUG);
+		$this->init();
+		$this->_log("Block '{$this->getBlockName()}' user init() passed", Zend_Log::DEBUG);
 	}
 	
 	/**
@@ -272,25 +339,228 @@ class Core_Block_Renderer implements Zend_View_Interface
 	}
 	
 	/**
-	 * Set enable caching block
+	 * Generate cache id string
 	 * 
-	 * @param  boolean $flag
+	 * @return string
+	 */
+	public function getCacheId(Core_Block_Renderer $block = null)
+	{
+		if (null === $block) {
+			return get_class($this);
+		}
+		
+		return $this->_getCacheId($block);
+	}
+	
+	/**
+	 * Set default flags map or if specified keys sets specified flag
+	 * 
+	 * @param  array|string $spec       All map array or request type key string
+	 * @param  array|string $renderType All request specified map or render type key string
+	 * @param  boolean      $value      Only if request and render types passed used this flag value
 	 * @return Core_Block_Renderer
 	 */
-	public function setCached($flag = true)
+	public function setDefaultCacheEnable($spec, $renderType = null, $value = null)
 	{
-		$this->_cached = (bool) $flag;
+		if (is_array($spec)) {
+			foreach ($spec as $rqType => $rdTypes) {
+				if (in_array($rqType, $this->_requestTypes) && is_array($rdTypes)) {
+					$rdTypes = array_intersect_key($rdTypes, array_flip($this->_renderTypes));
+					$rdTypes = array_merge($rdTypes, array_fill_keys(array_flip($this->_renderTypes), false));
+					self::$_defaultCacheEnable[$rqType] = $rdTypes;
+				}
+			}
+		} else if (in_array($spec, $this->_requestTypes)) {
+			if (is_array($renderType)) {
+				$renderType = array_intersect_key($renderType, array_flip($this->_renderTypes));
+				$renderType = array_merge($renderType, array_fill_keys(array_flip($this->_renderTypes), false));
+				self::$_defaultCacheEnable[$spec] = $renderType;
+			} else if (in_array($renderType, $this->_renderTypes)) {
+				self::$_defaultCacheEnable[$spec][$renderType] = (bool) $value;
+			}
+		}
+		
 		return $this;
 	}
 	
 	/**
-	 * Get cache enabled flag
+	 * Get cache enabled all map or by request type map or by request and render types value
 	 * 
+	 * @param  string $requestType [OPTIONAL] Request type, one of BLOCK_REQUEST_TYPE_* constants
+	 * @param  string $renderType  [OPTIONAL] Render type, one of BLOCK_RENDER_TYPE_* constants
+	 * @return array|boolean
+	 */
+	public function getDefaultCacheEnable($requestType = null, $renderType = null)
+	{
+		if (null !== $requestType) {
+			if (null !== $renderType) {
+				if (in_array($renderType, $this->_renderTypes)) {
+					return self::$_defaultCacheEnable[$requestType][$renderType];
+				}
+				
+				return false; // By default, request or render type independed state
+			}
+			
+			if (in_array($requestType, $this->_requestTypes)) {
+				return self::$_defaultCacheEnable[$requestType];
+			}
+			
+			return array( // By default, request or render type independed states array
+				self::BLOCK_RENDER_TYPE_HTML => false,
+				self::BLOCK_RENDER_TYPE_JSON => false,
+				self::BLOCK_RENDER_TYPE_XML  => false
+			);
+		}
+		
+		return self::$_defaultCacheEnable;
+	}
+	
+	/**
+	 * Set flags map or if specified keys sets specified flag
+	 *
+	 * @param  array|string $spec       All map array or request type key string
+	 * @param  array|string $renderType All request specified map or render type key string
+	 * @param  boolean      $value      Only if request and render types passed used this flag value
+	 * @return Core_Block_Renderer
+	 */
+	public function setCacheEnable($spec, $renderType = null, $value = null)
+	{
+		if (is_array($spec)) {
+			foreach ($spec as $rqType => $rdTypes) {
+				if (in_array($rqType, $this->_requestTypes) && is_array($rdTypes)) {
+					$rdTypes = array_intersect_key($rdTypes, array_flip($this->_renderTypes));
+					$rdTypes = array_merge($rdTypes, array_fill_keys(array_flip($this->_renderTypes), false));
+					$this->_cacheEnable[$rqType] = $rdTypes;
+				}
+			}
+		} else if (in_array($spec, $this->_requestTypes)) {
+			if (is_array($renderType)) {
+				$renderType = array_intersect_key($renderType, array_flip($this->_renderTypes));
+				$renderType = array_merge($renderType, array_fill_keys(array_flip($this->_renderTypes), false));
+				$this->_cacheEnable[$spec] = $renderType;
+			} else if (in_array($renderType, $this->_renderTypes)) {
+				$this->_cacheEnable[$spec][$renderType] = (bool) $value;
+			}
+		}
+	
+		return $this;
+	}
+	
+	/**
+	 * Get cache enabled all map or by request type map or by request and render types value
+	 *
+	 * @param  string $requestType [OPTIONAL] Request type, one of BLOCK_REQUEST_TYPE_* constants
+	 * @param  string $renderType  [OPTIONAL] Render type, one of BLOCK_RENDER_TYPE_* constants
+	 * @return array|boolean
+	 */
+	public function getCacheEnable($requestType = null, $renderType = null)
+	{
+		if (null !== $requestType) {				
+			if (in_array($requestType, $this->_requestTypes)) {
+				if (!array_key_exists($requestType, $this->_cacheEnable)) {
+					$this->_cacheEnable[$requestType] = $this->getDefaultCacheEnable($requestType);
+				}
+				
+				if (null !== $renderType) {
+					if (in_array($renderType, $this->_renderTypes)) {
+						if (!array_key_exists($renderType, $this->_cacheEnable[$requestType])) {
+							$this->_cacheEnable[$requestType][$renderType] = $this->getDefaultCacheEnable($requestType, $renderType);
+						}
+						
+						return $this->_cacheEnable[$requestType][$renderType];
+					}
+		
+					return false; // By default, request or render type independed state
+				}
+				
+				return $this->_cacheEnable[$requestType];
+			}
+				
+			return array( // By default, request or render type independed states array
+					self::BLOCK_RENDER_TYPE_HTML => false,
+					self::BLOCK_RENDER_TYPE_JSON => false,
+					self::BLOCK_RENDER_TYPE_XML  => false
+			);
+		}
+	
+		return $this->_cacheEnable;
+	}
+	
+	/**
+	 * Check if cache enabled (flase by default)
+	 * 
+	 * @param  string $renderType Render type selected
 	 * @return boolean
 	 */
-	public function isCached()
+	public function isCacheEnabled($renderType = self::BLOCK_RENDER_TYPE_HTML)
 	{
-		return $this->_cached;
+		if ($this->getRequest() instanceof Zend_Controller_Request_Http) {
+			if ($this->getRequest()->isXmlHttpRequest())
+			{
+				$enabled = $this->getCacheEnable(self::BLOCK_REQUEST_TYPE_XHR, $renderType);
+			}
+			else if ($this->getRequest()->isFlashRequest())
+			{
+				$enabled = $this->getCacheEnable(self::BLOCK_REQUEST_TYPE_FLASH, $renderType);
+			}
+			else if ($this->getRequest()->isPost())
+			{
+				$enabled = $this->getCacheEnable(self::BLOCK_REQUEST_TYPE_POST, $renderType);
+			}
+			else if ($this->getRequest()->isGet())
+			{
+				$enabled = $this->getCacheEnable(self::BLOCK_REQUEST_TYPE_GET, $renderType);
+			}
+			else if ($this->getRequest()->isPut())
+			{
+				$enabled = $this->getCacheEnable(self::BLOCK_REQUEST_TYPE_PUT, $renderType);
+			}
+			else if ($this->getRequest()->isDelete())
+			{
+				$enabled = $this->getCacheEnable(self::BLOCK_REQUEST_TYPE_DELETE, $renderType);
+			}
+		}
+
+		return false;
+	}
+	
+	/**
+	 * Gets request based render type
+	 * 
+	 * @return string
+	 */
+	public function getRenderType()
+	{
+		if (!($this->getRequest() instanceof Zend_Controller_Request_Http)) {
+			return self::BLOCK_RENDER_TYPE_HTML;
+		}
+			
+		if ($this->getRequest()->isXmlHttpRequest())
+		{
+			return  $this->getRequestRenderType(self::BLOCK_REQUEST_TYPE_XHR);
+		}
+		else if ($this->getRequest()->isFlashRequest())
+		{
+			return  $this->getRequestRenderType(self::BLOCK_REQUEST_TYPE_FLASH);
+		}
+		else if ($this->getRequest()->isPost())
+		{
+			return  $this->getRequestRenderType(self::BLOCK_REQUEST_TYPE_POST);
+		}
+		else if ($this->getRequest()->isGet())
+		{
+			return  $this->getRequestRenderType(self::BLOCK_REQUEST_TYPE_GET);
+		}
+		else if ($this->getRequest()->isPut())
+		{
+			return  $this->getRequestRenderType(self::BLOCK_REQUEST_TYPE_PUT);
+		}
+		else if ($this->getRequest()->isDelete())
+		{
+			return  $this->getRequestRenderType(self::BLOCK_REQUEST_TYPE_DELETE);
+		}
+		
+		return  $this->getRequestRenderType(false);		
 	}
 	
 	/**
@@ -311,11 +581,6 @@ class Core_Block_Renderer implements Zend_View_Interface
 			}
 		} else if (in_array($spec, $this->_requestTypes) && in_array($value, $this->_renderTypes)) {
 			self::$_defaultRequestRenderTypes[$spec] = $value;
-		} else {
-			require_once 'Core/Block/Exception.php';
-			$e = new Core_Block_Exception("Invalid default request render type(s) definition passed, must be an array or key => value pair");
-			$e->setView($this);
-			throw $e;
 		}
 		
 		return $this;
@@ -360,11 +625,6 @@ class Core_Block_Renderer implements Zend_View_Interface
 			}
 		} else if (in_array($spec, $this->_requestTypes) && in_array($value, $this->_renderTypes)) {
 			$this->_requestRenderTypes[$spec] = $value;
-		} else {
-			require_once 'Core/Block/Exception.php';
-			$e = new Core_Block_Exception("Invalid request render type(s) definition passed, must be an array or key => value pair");
-			$e->setView($this);
-			throw $e;
 		}
 		
 		return $this;		
@@ -618,27 +878,35 @@ class Core_Block_Renderer implements Zend_View_Interface
 	/**
 	 * Processes a view script and returns the output.
 	 *
-	 * @param string $name The script name to process.
+	 * @param  string $name The script name to process.
 	 * @return string The script output.
 	 */
 	public function render($name)
 	{
-		$this->_log("Try to render script '{$name}'");
+		$this->_log("Try to render script '{$name}'", Zend_Log::DEBUG);
 		
 		try {
-			if (!($this->getRequest() instanceof Zend_Controller_Request_Http)) {
-				$this->_log("Selected 'toHtml' render method");
-				return $this->toHtml();
+			$renderType   = $this->getRenderType();
+			$cacheEnabled = $this->isCacheEnabled($renderType);
+			
+			if (null !== $this->getCache() && $cacheEnabled && $this->getCache()->test($this->getCacheId())) {
+				// Load cached data if exists
+				$response = $this->getCache()->load($this->getCacheId());
+			} else {
+				$renderType = 'to' . ucfirst($renderType);
+				$this->_log("Selected '{$renderType}' render method", Zend_Log::DEBUG);
+				$response = $this->$renderType();
+				
+				if (null !== $this->getCache() && $cacheEnabled) {
+					// save cache if needed
+					$this->getCache()->save($response, $this->getCacheId());
+				}
 			}
 			
-			foreach ($this->_renderMap as $requestMethod => $renderMethod) {
-				if ($this->getRequest()->$requestMethod()) {
-					$method = 'to' . ucfirst($renderMethod);
-					return $this->$method();
-				}
-			}	
+			$this->setRendered(true);
+			return $response;	
 		} catch (Exception $e) {
-			$this->_log("Render script '{$name}' failed");
+			$this->_log("Render script '{$name}' failed", Zend_Log::ERR);
 			require_once 'Core/Block/Exception.php';
 			$e = new Core_Block_Exception($e->getMessage(), $e->getCode(), $e->getPrevious());
 			$e->setView($this);
@@ -677,6 +945,7 @@ class Core_Block_Renderer implements Zend_View_Interface
 	public function toXml()
 	{
 		// TODO: xml as variant for realization in future
+		return; 
 	}
 	
 	/**
