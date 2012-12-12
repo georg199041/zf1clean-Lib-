@@ -17,7 +17,7 @@ class Core
 	 * @throws Exception
 	 * @return object
 	 */
-	public static function getClass($className, $singleton = true)
+	public static function getClass($className, $singleton = true, $options = null)
 	{
 		if (!@class_exists($className, true)) {
 			throw new Exception("Class '{$className}' not found");
@@ -27,7 +27,7 @@ class Core
 			return self::$_objects[$className];
 		}
 		
-		$class = new $className();
+		$class = new $className($options);
 		if ($singleton) {
 			self::$_objects[$className] = $class;
 			return self::$_objects[$className];

@@ -14,19 +14,22 @@
  *
  * @category   Core
  * @package    Core_Block
+ * @subpackage Core_Block_Renderer
  * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @version    $Id: Exception.php 24218 2011-07-10 01:22:58Z ramon $
  */
 
 /**
- * @see Zend_Exception
+ * @see Core_View_Exception
  */
-require_once 'Zend/View/Exception.php';
+require_once 'Core/View/Exception.php';
 
 /**
+ * @category   Core
  * @package    Core_Block
+ * @subpackage Core_Block_Renderer
  * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Core_Block_Exception extends Zend_View_Exception {}
+class Core_Block_Renderer_Exception extends Core_View_Exception {}
