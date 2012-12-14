@@ -25,6 +25,9 @@
 require_once 'Zend/Exception.php';
 
 /**
+ * Image exception class
+ * 
+ * @category   Core
  * @package    Core_Image
  * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License

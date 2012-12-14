@@ -1,7 +1,46 @@
 <?php
+/**
+ * Zend Framework
+ *
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Core
+ * @package    Core_Block
+ * @subpackage Core_Block_Form
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Widget.php 0.1 2012-12-12 pavlenko $
+ */
 
+/**
+ * @see Core_Block_View
+ */
 require_once "Core/Block/View.php";
 
+/**
+ * @see Zend_Form
+ */
+require_once 'Zend/Form.php';
+
+/**
+ * Concrete Form block class
+ * No need template for it
+ * Implementing Zend_Form like forms with all it functional
+ *
+ * @category   Core
+ * @package    Core_Block
+ * @subpackage Core_Block_Form
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ */
 class Core_Block_Form_Widget extends Core_Block_View
 {
 	/**
@@ -23,6 +62,8 @@ class Core_Block_Form_Widget extends Core_Block_View
 	 * 
 	 * (non-PHPdoc)
 	 * @see Core_Block_View::setOptions()
+	 * 
+	 * @param array $options Array of Zend_Form like options can be supplied
 	 */
 	public function setOptions(array $options)
 	{
@@ -49,6 +90,7 @@ class Core_Block_Form_Widget extends Core_Block_View
 	
 	/**
 	 * Get form internal object
+	 * Instantiate decorators for new form instance
 	 * 
 	 * @return Zend_Form
 	 */
@@ -77,6 +119,10 @@ class Core_Block_Form_Widget extends Core_Block_View
 	 * 
 	 * (non-PHPdoc)
 	 * @see Core_Block_View::__call()
+	 * 
+	 * @param  string $method Method for call in Zend_Form
+	 * @param  array  $args   Method arguments array
+	 * @return mixed Result wery depended by called method
 	 */
 	public function __call($method, $args)
 	{
@@ -137,11 +183,14 @@ class Core_Block_Form_Widget extends Core_Block_View
 	 * 
 	 * (non-PHPdoc)
 	 * @see Core_Block_View::render()
+	 * 
+	 * @param  string $name Name of script !!! use BLOCK_DUMMY constant for preventing errors
+	 * @return string XHTML
 	 */
 	public function render($name)
 	{
 		$class  = preg_replace('/[^\p{L}\-]/u', '_', $this->getBlockName());
-		$before = $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);
+		$before = $this->renderBlockChilds(self::BLOCK_PLACEMENT_BEFORE);
 		
 		try {
 			$this->setAttribute('enctype', $this->getForm()->getEnctype());
@@ -166,7 +215,7 @@ class Core_Block_Form_Widget extends Core_Block_View
 			//throw $ve;
 		}
     	
-		$after = $this->_renderBlocks(self::BLOCK_PLACEMENT_AFTER);
+		$after = $this->renderBlockChilds(self::BLOCK_PLACEMENT_AFTER);
     	return '<div class="cbfw-block cbfw-block-' . $class . '">' . $startTag . $before . $response . $after . $endTag . '</div>';
 	}
 }

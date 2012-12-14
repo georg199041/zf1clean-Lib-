@@ -14,6 +14,7 @@
  *
  * @category   Core
  * @package    Core_Image
+ * @subpackage Core_Image_Cache
  * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @version    $Id: Exception.php 24218 2011-07-10 01:22:58Z ramon $
@@ -25,7 +26,11 @@
 require_once 'Core/Image/Exception.php';
 
 /**
+ * Image cache exception class
+ * 
+ * @category   Core
  * @package    Core_Image
+ * @subpackage Core_Image_Cache
  * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */

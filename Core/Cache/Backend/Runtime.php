@@ -20,10 +20,20 @@
  * @version    $Id: Runtime.php 1.0 2012-11-30 13:20:00Z Pavlenko $
  */
 
-/** @see Zend_Cache_Manager */
-require_once 'Zend/Cache/Manager.php';
+/**
+ * @see Zend_Cache_Backend_Interface
+ */
+require_once 'Zend/Cache/Backend/Interface.php';
 
 /**
+ * @see Zend_Cache_Backend
+ */
+require_once 'Zend/Cache/Backend.php';
+
+/**
+ * This cache backend save data only when script run and destroys on complete
+ * Usable for preventing duplicated request to database
+ * 
  * @category   Core
  * @package    Core_Cache
  * @subpackage Core_Cache_Backend
@@ -59,8 +69,7 @@ class Core_Cache_Backend_Runtime extends Zend_Cache_Backend implements Zend_Cach
      * Test if a cache is available or not (for the given id)
      *
      * @param  string $id cache id
-     * @return mixed false (a cache is not available) or "last modified" timestamp (int) of the available cache record
-     * @throws Zend_Cache_Exception
+     * @return bool A cache available state
      */
 	public function test($id)
 	{
@@ -107,7 +116,7 @@ class Core_Cache_Backend_Runtime extends Zend_Cache_Backend implements Zend_Cach
      *
      * @param  string $mode clean mode
      * @param  array  $tags array of tags
-     * @throws Zend_Cache_Exception
+     * @throws Zend_Cache_Exception If invalid cleaning mode selected
      * @return boolean true if no problem
      */
 	public function clean($mode = Zend_Cache::CLEANING_MODE_ALL, $tags = array())

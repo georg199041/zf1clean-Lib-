@@ -1,14 +1,32 @@
 <?php
-
 /**
- * Image resizer base class
+ * Zend Framework
  *
- * @author     Pavlenko Evgeniy
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
  * @category   Core
  * @package    Core_Image
- * @version    2.3
- * @subpackage Abstract
- * @copyright  Copyright (c) 2005-2009 SunNY Creative Technologies. (http://www.sunny.net)
+ * @subpackage Core_Image_Adapter
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Abstract.php 0.1 2012-12-12 pavlenko $
+ */
+
+/**
+ * Base image processing class
+ *
+ * @category   Core
+ * @package    Core_Image
+ * @subpackage Core_Image_Adapter
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 abstract class Core_Image_Adapter_Abstract
@@ -34,41 +52,57 @@ abstract class Core_Image_Adapter_Abstract
 	protected $_path;
 	
 	/**
+	 * Image old width
+	 * 
 	 * @var integer
 	 */
 	protected $_width;
 	
 	/**
+	 * Image old height
+	 * 
 	 * @var integer
 	 */
 	protected $_height;
 	
 	/**
+	 * Image old offset of canvas top
+	 * 
 	 * @var integer
 	 */
 	protected $_offsetTop = 0;
 	
 	/**
+	 * Image old offset of canvas left
+	 * 
 	 * @var integer
 	 */
 	protected $_offsetLeft = 0;
 	
 	/**
+	 * New image width
+	 * 
 	 * @var integer
 	 */
 	protected $_newWidth;
 	
 	/**
+	 * New image height
+	 * 
 	 * @var integer
 	 */
 	protected $_newHeight;
 	
 	/**
+	 * New top image offset
+	 * 
 	 * @var integer
 	 */
 	protected $_newOffsetTop = 0;
 	
 	/**
+	 * New image left offset
+	 * 
 	 * @var integer
 	 */
 	protected $_newOffsetLeft = 0;
@@ -102,16 +136,22 @@ abstract class Core_Image_Adapter_Abstract
 	protected $_needResizeSmallerThan = false;
 	
 	/**
+	 * Used resize method name
+	 * 
 	 * @var string
 	 */
 	protected $_method;
 	
 	/**
+	 * Compression to use in output
+	 * 
 	 * @var integer
 	 */
 	protected $_compression = 85;
 	
 	/**
+	 * Image life time in cache
+	 * 
 	 * @var integer
 	 */
 	protected static $_lifeTime = 2592000;
@@ -126,6 +166,8 @@ abstract class Core_Image_Adapter_Abstract
 	
 	/**
 	 * Save image to filesystem
+	 * 
+	 * @return void
 	 */
 	abstract protected function _save();
 	

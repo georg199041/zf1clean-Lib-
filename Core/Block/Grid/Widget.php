@@ -412,7 +412,7 @@ class Core_Block_Grid_Widget extends Core_Block_View
 	{
 		$class = preg_replace('/[^\p{L}\-]/u', '_', $this->getBlockName());
    		
-   		$pre = $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);
+   		$pre = $this->renderBlockChilds(self::BLOCK_PLACEMENT_BEFORE);
 		
 		try {
 			$response = '<table ' . $this->toHtmlAttributes() . '>' . PHP_EOL
@@ -426,7 +426,7 @@ class Core_Block_Grid_Widget extends Core_Block_View
 			$response = $e->getMessage();
 		}
 		
-		$post = $this->_renderBlocks(self::BLOCK_PLACEMENT_AFTER);
+		$post = $this->renderBlockChilds(self::BLOCK_PLACEMENT_AFTER);
 		
 		return '<div class="cbgw-block cbgw-block-' . $class . '" action="' . $this->url($this->getRouteOptions(), $this->getRouteName(), true, true) . '">'
     		 . $pre . $response . $post

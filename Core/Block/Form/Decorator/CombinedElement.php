@@ -1,5 +1,40 @@
 <?php
+/**
+ * Zend Framework
+ *
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Core
+ * @package    Core_Block
+ * @subpackage Core_Block_Form_Decorator
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: CombinedElement.php 0.1 2012-12-12 pavlenko $
+ */
 
+/**
+ * @see Zend_Application_Bootstrap_Bootstrap
+ */
+require_once "Zend/Application/Bootstrap/Bootstrap.php";
+
+/**
+ * Concrete form element decorator
+ * Basic usage implementing to add buttons to form input element like as viewed input[type=file]
+ *
+ * @category   Core
+ * @package    Core_Block
+ * @subpackage Core_Block_Form_Decorator
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ */
 class Core_Block_Form_Decorator_CombinedElement extends Core_Block_Form_Decorator_CompositeElement
 {
 	/**

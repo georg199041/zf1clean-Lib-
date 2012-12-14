@@ -1,14 +1,37 @@
 <?php
-
 /**
- * Access control plugin
+ * Zend Framework
  *
- * @author     Pavlenko Evgeniy
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
  * @category   Core
  * @package    Core_Controller
- * @version    2.3
- * @subpackage Plugin
- * @copyright  Copyright (c) 2012 SunNY Creative Technologies. (http://www.sunny.net)
+ * @subpackage Core_Controller_Plugin
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Acl.php 0.1 2012-12-12 pavlenko $
+ */
+
+/**
+ * @see Zend_Controller_Plugin_Abstract
+ */
+require_once "Zend/Controller/Plugin/Abstract.php";
+
+/**
+ * Access control list controller plugin class
+ *
+ * @category   Core
+ * @package    Core_Controller
+ * @subpackage Core_Controller_Plugin
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Core_Controller_Plugin_Acl extends Zend_Controller_Plugin_Abstract

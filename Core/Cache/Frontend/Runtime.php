@@ -1,8 +1,51 @@
 <?php
-//TODO check needed functional
+/**
+ * Zend Framework
+ *
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Core
+ * @package    Core_Cache
+ * @subpackage Core_Cache_Frontend
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Runtime.php 1.0 2012-11-30 13:20:00Z Pavlenko $
+ */
+
+/**
+ * @see Zend_Cache_Core
+ */
+require_once 'Zend/Cache/Core.php';
+
+/**
+ * This cache frontend save data only when script run and destroys on complete
+ * Usable for preventing duplicated request to database
+ * 
+ * @category   Core
+ * @package    Core_Cache
+ * @subpackage Core_Cache_Frontend
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ */
 class Core_Cache_Frontend_Runtime extends Zend_Cache_Core
 {
-    public function load($id, $doNotTestCacheValidity = false, $doNotUnserialize = false)
+    /**
+     * Test if a cache is available for the given id and (if yes) return it (false else)
+     *
+     * @param  string  $id                     cache id
+     * @param  boolean $doNotTestCacheValidity Ignored
+     * @param  boolean $doNotUnserialize       Ignored
+     * @return string cached datas (or false)
+     */
+	public function load($id, $doNotTestCacheValidity = false, $doNotUnserialize = false)
     {
         if (!$this->_options['caching']) {
             return false;
@@ -24,6 +67,12 @@ class Core_Cache_Frontend_Runtime extends Zend_Cache_Core
         return $data;
     }
 
+    /**
+     * Test if a cache is available or not (for the given id)
+     *
+     * @param  string $id cache id
+     * @return bool A cache available state
+     */
     public function test($id)
     {
         if (!$this->_options['caching']) {
@@ -37,6 +86,18 @@ class Core_Cache_Frontend_Runtime extends Zend_Cache_Core
         return $this->_backend->test($id);
     }
 
+    /**
+     * Save some datas into a cache record
+     * 
+     * Note: this backend does not supperted tags
+     *
+     * @param  string $data             datas to cache
+     * @param  string $id               cache id
+     * @param  array  $tags             array of strings, the cache record will be tagged by each string entry
+     * @param  int    $specificLifetime Ignored
+     * @param  int    $priority         Priority of cache record
+     * @return boolean true if no problem
+     */
     public function save($data, $id = null, $tags = array(), $specificLifetime = false, $priority = 8)
     {
         if (!$this->_options['caching']) {
@@ -104,6 +165,12 @@ class Core_Cache_Frontend_Runtime extends Zend_Cache_Core
         return true;
     }
     
+    /**
+     * Remove a cache record
+     *
+     * @param  string $id cache id
+     * @return boolean true if no problem
+     */
     public function remove($id)
     {
         if (!$this->_options['caching']) {
@@ -116,6 +183,16 @@ class Core_Cache_Frontend_Runtime extends Zend_Cache_Core
         return $this->_backend->remove($id);
     }
     
+    /**
+     * Clean all cache records
+     *
+     * Note: available only CLEANING_MODE_ALL
+     *
+     * @param  string $mode clean mode
+     * @param  array  $tags array of tags
+     * @throws Zend_Cache_Exception If invalid cleaning mode selected
+     * @return boolean true if no problem
+     */
     public function clean($mode = 'all', $tags = array())
     {
         if (!$this->_options['caching']) {

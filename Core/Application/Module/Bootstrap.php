@@ -1,7 +1,40 @@
 <?php
+/**
+ * Zend Framework
+ *
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Core
+ * @package    Core_Application
+ * @subpackage Core_Application_Module
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Bootstrap.php 0.1 2012-12-12 pavlenko $
+ */
 
+/**
+ * @see Core_Application_Bootstrap_Abstract
+ */
 require_once "Core/Application/Bootstrap/Abstract.php";
 
+/**
+ * Module abstract boostraping class (partialy cloned Zend_Application_Module_Bootstrap)
+ * Like in Application bootstrap you can add some resource types for module loader here
+ * 
+ * @category   Core
+ * @package    Core_Application
+ * @subpackage Core_Application_Module
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ */
 abstract class Core_Application_Module_Bootstrap extends Core_Application_Bootstrap_Abstract
 {
 	/**
@@ -51,6 +84,7 @@ abstract class Core_Application_Module_Bootstrap extends Core_Application_Bootst
 	
 	/**
 	 * Ensure resource loader is loaded
+	 * Adding custom resource types here
 	 *
 	 * @return void
 	 */

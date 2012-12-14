@@ -19,10 +19,14 @@
  * @version    $Id: Manager.php 1.0 2012-11-30 13:20:00Z Pavlenko $
  */
 
-/** @see Zend_Cache_Manager */
+/**
+ * @see Zend_Cache_Manager
+ */
 require_once 'Zend/Cache/Manager.php';
 
 /**
+ * Extenting cache manager for add to cache adapters a label property
+ * 
  * @category   Core
  * @package    Core_Cache
  * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
@@ -40,10 +44,18 @@ class Core_Cache_Manager extends Zend_Cache_Manager
 		return $this->_optionTemplates;
 	}
 	
+	/**
+	 * Get cache adapter
+	 * Try to add label property if not extsts
+	 * 
+	 * @param  string $name
+	 * @return Zend_Cache_Core
+	 */
 	public function getCache($name)
 	{
 		$cache = parent::getCache($name);
 		if ($cache instanceof Zend_Cache_Core) {
+			require_once 'Zend/Reflection/Class.php';
 			$r = new Zend_Reflection_Class($cache);
 			$p = $r->getProperty('_options');
 			$p->setAccessible(true);

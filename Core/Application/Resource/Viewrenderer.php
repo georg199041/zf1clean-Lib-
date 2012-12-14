@@ -1,22 +1,54 @@
 <?php
+/**
+ * Zend Framework
+ *
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Core
+ * @package    Core_Application
+ * @subpackage Core_Application_Resource
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Viewrenderer.php 0.1 2012-12-12 pavlenko $
+ */
 
+/**
+ * @see Zend_Application_Resource_ResourceAbstract
+ */
 require_once 'Zend/Application/Resource/ResourceAbstract.php';
 
 /**
  * View renderer instantiate resource
+ * Can configure many options before displatching request
  *
- * @author     Pavlenko Evgeniy
  * @category   Core
  * @package    Core_Application
- * @version    2.3
- * @subpackage Resource
- * @copyright  Copyright (c) 2012 SunNY Creative Technologies. (http://www.sunny.net)
+ * @subpackage Core_Application_Resource
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Core_Application_Resource_Viewrenderer extends Zend_Application_Resource_ResourceAbstract
 {
-    protected $_helperFile = 'Zend/Controller/Action/Helper/ViewRenderer.php';
+    /**
+     * Used view renderer action helper path
+     * 
+     * @var string
+     */
+	protected $_helperFile = 'Zend/Controller/Action/Helper/ViewRenderer.php';
 	
+	/**
+	 * Used view renderer class name in helper
+	 * 
+	 * @var string
+	 */
     protected $_helperClass = 'Zend_Controller_Action_Helper_ViewRenderer';
     
     /**
@@ -57,8 +89,7 @@ class Core_Application_Resource_Viewrenderer extends Zend_Application_Resource_R
 	/**
 	 * Init resource method
 	 * 
-	 * (non-PHPdoc)
-	 * @see Zend_Application_Resource_Resource::init()
+	 * @return Zend_Controller_Action_Helper_Abstract|Zend_Controller_Action_Helper_ViewRenderer
 	 */
     public function init()
     {
@@ -69,12 +100,11 @@ class Core_Application_Resource_Viewrenderer extends Zend_Application_Resource_R
 			$this->_helperClass = $options['helperClass'];
 		}
 		
-		
 		// Instantiate view renderer before front controller dispatch started
+		require_once 'Zend/Controller/Action/HelperBroker.php';
 		if (!Zend_Controller_Action_HelperBroker::hasHelper('viewRenderer')) {
 			require_once $this->_helperFile;
 			$helperClass = $this->_helperClass;
-			//require_once 'Core/Controller/Action/Helper/ViewRenderer.php';
 			Zend_Controller_Action_HelperBroker::getStack()->offsetSet(
 				-80,
 				new $helperClass()
@@ -82,7 +112,7 @@ class Core_Application_Resource_Viewrenderer extends Zend_Application_Resource_R
 		}
 		
 		$viewRenderer = Zend_Controller_Action_HelperBroker::getStaticHelper('viewRenderer');
-		
+		// Configure helper
 		foreach ($options as $key => $value) {
 			$method = 'set' . ucfirst($key);
 			

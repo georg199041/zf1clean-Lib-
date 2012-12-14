@@ -1,10 +1,45 @@
 <?php
+/**
+ * Zend Framework
+ *
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Core
+ * @package    Core_Block
+ * @subpackage Core_Block_Form_Decorator
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: CompositeGroup.php 0.1 2012-12-12 pavlenko $
+ */
 
+/**
+ * @see Zend_Form_Decorator_Abstract
+ */
+require_once "Zend/Form/Decorator/Abstract.php";
+
+/**
+ * Concrete form group (<fieldset></fieldset>) decorator for use BEM css model
+ *
+ * @category   Core
+ * @package    Core_Block
+ * @subpackage Core_Block_Form_Decorator
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ */
 class Core_Block_Form_Decorator_CompositeGroup extends Zend_Form_Decorator_Abstract
 {
 	/**
 	 * Render composite decorator
 	 * 
+	 * @param  string $content Initial content for rendering
 	 * @return string
 	 */
 	public function render($content)

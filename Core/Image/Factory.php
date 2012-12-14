@@ -20,6 +20,8 @@
  */
 
 /**
+ * Image factoru class for statical usage
+ * 
  * @package    Core_Image
  * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
@@ -49,6 +51,7 @@ class Core_Image_Factory
 	 * Load image from path name
 	 *
 	 * @param  string $path        Path to file
+	 * @param  array  $preprocess  Preprocessing image instructions
 	 * @return Core_Image_Abstract Image object
 	 * @throws Exception           If has some errors
 	 */

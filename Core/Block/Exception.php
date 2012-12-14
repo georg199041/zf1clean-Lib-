@@ -16,7 +16,7 @@
  * @package    Core_Block
  * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Exception.php 24218 2011-07-10 01:22:58Z ramon $
+ * @version    $Id: Exception.php 0.1 2012-12-12 pavlenko $
  */
 
 /**
@@ -25,6 +25,9 @@
 require_once 'Zend/View/Exception.php';
 
 /**
+ * Block template engine base exception
+ * Created for self usage
+ * 
  * @package    Core_Block
  * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License

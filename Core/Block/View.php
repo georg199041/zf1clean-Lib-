@@ -1,26 +1,48 @@
 <?php
 
+/**
+ * @see Zend_View_Interface
+ */
 require_once "Zend/View/Interface.php";
 
+/**
+ * @see Core_Attributes
+ */
 require_once "Core/Attributes.php";
 
 /**
- * Default view rendering engine
- * Proxied to Zend_View
+ * Zend Framework
  *
- * @author     Pavlenko Evgeniy
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
  * @category   Core
  * @package    Core_Block
- * @version    2.1
- * @subpackage View
- * @copyright  Copyright (c) 2012 SunNY Creative Technologies. (http://www.sunny.net)
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: View.php 0.1 2012-12-12 pavlenko $
  */
 class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 {
-	const BLOCK_PLACEMENT_BEFORE = 'before';
+	/**
+	 * Dummy string, uses fron no script file required renreds
+	 */
+	const BLOCK_DUMMY = 'DUMMY';
 	
-	const BLOCK_PLACEMENT_AFTER = 'after';
+	const BLOCK_PLACEMENT_BEFORE = 'BEFORE';	
+	const BLOCK_PLACEMENT_AFTER  = 'AFTER';
+	
+	/**
+	 * Cache manager place key
+	 */
+	const BLOCK_CACHEMANAGER_KEY = 'Core_Block_View';
 	
 	/**
 	 * Global engine object
@@ -30,18 +52,18 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	protected static $_engine;
 	
 	/**
-	 * Cache object
+	 * Global cache object
 	 * 
 	 * @var object
 	 */
 	protected static $_cache;
 	
 	/**
-	 * Cache enabledflag
+	 * Cache local use flag
 	 * 
 	 * @var boolean
 	 */
-	protected $_useCache = false;
+	protected $_cacheable = false;
 	
 	/**
 	 * Template script name
@@ -51,25 +73,11 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	protected $_scriptName;
 	
 	/**
-	 * Template name highlighter enabled flag
-	 * 
-	 * @var boolean
-	 */
-	protected $_highligterEnabled = false;
-	
-	/**
 	 * Flag of rendering completed
 	 * 
 	 * @var boolean
 	 */
 	protected $_rendered = false;
-	
-	/**
-	 * Request object
-	 * 
-	 * @var Zend_Controller_Request_Abstract
-	 */
-	protected $_request;
 	
 	/**
 	 * Internal block name
@@ -93,40 +101,43 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	protected $_blockChilds = array();
 	
 	/**
-	 * Default template highlighter css styles
+	 * Plock placement relative to parent
+	 * 
+	 * @var string
+	 */
+	protected $_blockPlacment = self::BLOCK_PLACEMENT_AFTER;
+	
+	/**
+	 * All available placements for comarison functions
 	 * 
 	 * @var array
 	 */
-	protected $_highliterCss = array(
-		'background' => '#ccc',
-		'padding'    => '1px',
-		'border'     => '1px solid #999'
+	protected $_blockAvailablePlacements = array(
+		self::BLOCK_PLACEMENT_BEFORE,
+		self::BLOCK_PLACEMENT_AFTER,
 	);
 	
 	/**
-	 * Throw custom view exception
+	 * Logger instance
 	 * 
-	 * @param  string $message
-	 * @throws Zend_View_Exception
+	 * @var Zend_Log
 	 */
-	protected function _throwViewException($message)
-	{
-		require_once 'Zend/View/Exception.php';
-		$e = new Zend_View_Exception($message);
-		$e->setView($this);
-		throw $e;
-	}
+	protected static $_logger;
 	
 	/**
-	 * Validate assign key for protection of
-	 * private and protected properties
+	 * Add log message
 	 * 
-	 * @param  string $key
-	 * @return boolean
+	 * @param  string $message  Log message
+	 * @param  string $priority Log priority (message status)
+	 * @return Core_Block_View
 	 */
-	protected function _validateAssign($key)
+	protected function _log($message, $priority = Zend_Log::INFO)
 	{
-		return ('_' == substr($key, 0, 1)) ? false : true;
+		if (self::$_logger instanceof Zend_Log) {
+			self::$_logger->log(get_class($this) . '::' . $message, $priority);
+		}
+		
+		return $this;
 	}
 	
 	/**
@@ -137,20 +148,27 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 */
 	protected function _getScriptFile()
 	{
+		$this->_log(__FUNCTION__ . '()');
 		$name = $this->getScriptName();
 		if (null === $name) {
-			throw new Exception("Script name not defined");
+			require_once 'Core/Block/Exception.php';
+			$e = new Core_Block_Exception("Script name not defined");
+			$e->setView($this);
+			throw $e;
 		}
 		
 		foreach ($this->getScriptPaths() as $path) {
 			$file = $path . $name;
 			if (file_exists($file)) {
+				$this->_log(__FUNCTION__ . '() founded file: ' . $file);
 				return $file;
 			}
 		}
 		
-		$paths = implode(', ', $this->getScriptPaths());
-		throw new Exception("Script '$name' not found in paths: $paths");
+		require_once 'Core/Block/Exception.php';
+		$e = new Core_Block_Exception("Script '$name' not found in paths: " . implode(', ', $this->getScriptPaths()));
+		$e->setView($this);
+		throw $e;
 	}
 	
 	/**
@@ -161,9 +179,13 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 */
 	protected function _getBlockNames()
 	{
+		$this->_log(__FUNCTION__ . '()');
 		$name = $this->getScriptName();
 		if (null === $name) {
-			throw new Exception("Script name not defined");
+			require_once 'Core/Block/Exception.php';
+			$e = new Core_Block_Exception("Script name not defined");
+			$e->setView($this);
+			throw $e;
 		}
 		
 		require_once 'Zend/Controller/Action/HelperBroker.php';
@@ -173,65 +195,98 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 		require_once 'Zend/Controller/Front.php';
 		$module = Zend_Controller_Front::getInstance()->getRequest()->getModuleName();
 		
-		return array($module . '/' . $name, 'application/' . $name);;
+		$names = array($module . '/' . $name, 'application/' . $name);
+		$this->_log(__FUNCTION__ . "() founded names: array(" . implode(", ", $names) . ")");
+		return $names;
 	}
 	
 	/**
-	 * Render highliter dom
+	 * Generate cache id
 	 * 
-	 * @param  string $file
 	 * @return string
 	 */
-	protected function _renderHighliter($file)
+	protected function _cacheId()
 	{
-		if ($this->isHighlighterEnabled()) {
-			$css = array();
-			foreach ($this->getHighlighterCss() as $key => $val) {
-				$css[] = "$key:$val";
-			}
-			
-			return '<div style="position:relative">'
-			     . '<div style="position:absolute;' . implode(';', $css) . '">'
-			     . $file
-			     . '</div>'
-			     . '</div>';
-		}
-		
-		return '';
+		$id = get_class($this) . '_' . md5(serialize($this));
+		$this->_log(__FUNCTION__ . '() = ' . $id);
+		return $id;
 	}
 	
 	/**
-	 * Render other blocks to specified placement
+	 * Helper for test cache record exists
 	 * 
-	 * @param  string $placement response key
-	 * @return string
+	 * @param  string $id
+	 * @return boolean
 	 */
-	protected function _renderBlocks($placement = self::BLOCK_PLACEMENT_AFTER)
+	protected function _cacheTest($id)
 	{
-		$response = '';
-		foreach ($this->getBlockChilds($placement) as $child) {
-			$response .= $child->render('DUMMY');
+		if ($this->getCache() && $this->isCacheable()) {
+			return $this->getCache()->test($id);
 		}
 		
-		return $response;
+		$this->_log(__FUNCTION__ . '() simulated');
+		return false;
 	}
 	
 	/**
-	 * Render blocks to layout keys
+	 * Helper for load cache record data
+	 * 
+	 * @param  string $id
+	 * @return boolean
 	 */
-	protected function _renderBlocksToLayout()
+	protected function _cacheLoad($id)
 	{
-		$layout = Zend_Layout::startMvc();
-		$placements = $this->getBlockChilds(null);
-		foreach ($placements as $placement => $blocks) {
-			if ($placement == self::BLOCK_PLACEMENT_AFTER || $placement == self::BLOCK_PLACEMENT_BEFORE) {
-				continue;
-			}
-			
-			foreach ($blocks as $child) {
-				$layout->{$placement} .= $child->render('DUMMY');
-			}
+		if ($this->getCache() && $this->isCacheable()) {
+			return $this->getCache()->load($id);
 		}
+		
+		$this->_log(__FUNCTION__ . '() simulated');
+		return true;
+	}
+	
+	/**
+	 * Helper for save cache record data
+	 * 
+	 * @param  mixed $data
+	 * @param  string $id
+	 * @return boolean
+	 */
+	protected function _cacheSave($data, $id = null)
+	{
+		if ($this->getCache() && $this->isCacheable()) {
+			return $this->getCache()->save($data, $id);
+		}
+		
+		$this->_log(__FUNCTION__ . '() simulated');
+		return true;
+	}
+	
+	/**
+	 * Try to render 'BLOCK' strategy
+	 * 
+	 * @return boolean|string
+	 */
+	protected function _findAndRenderBlock()
+	{
+		$this->_log(__FUNCTION__ . '()');
+		if (get_class($this) != 'Core_Block_View') {
+			$this->_log(__FUNCTION__ . '() we are inside custom block class -> no need to use');
+			return false;
+		}
+		
+		$names = $this->_getBlockNames();
+		foreach ($names as $blockName) {
+			try {
+				$block = Core::getBlock($blockName);
+				$block->setScriptName($this->getScriptName());
+				//$block->setLogger($this->getLogger());
+				$this->_log(__FUNCTION__ . '() block ' . get_class($block) . ' founded, try to render it');
+				return $block->render(self::BLOCK_DUMMY);
+			} catch (Exception $e) {}
+		}
+		
+		$this->_log(__FUNCTION__ . '() block(s) not found', Zend_Log::WARN);
+		return false;
 	}
 	
 	/**
@@ -247,7 +302,11 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 			$this->setOptions($options->toArray());
 		}
 		
-		$this->getEngine()->addHelperPath('Core/Block/View/Helper', 'Core_Block_View_Helper');		
+		$this->_log(__FUNCTION__ . '(' . gettype($options) . ')');
+		
+		$this->getEngine()->addHelperPath('Core/Block/View/Helper', 'Core_Block_View_Helper');
+		
+		$this->_log('init()');
 		$this->init();
 	}
 	
@@ -269,9 +328,23 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 		return $this;
 	}
 	
+	/**
+	 * Helper function to translate some strings
+	 * 
+	 * Internaly use Zend_Translate
+	 * 
+	 * Usage anywhere in block class or in template:
+	 * <php>
+	 *     $this->__('Untranslated string');
+	 * </php>
+	 * 
+	 * @see Zend_Translate
+	 * @param  string $string Input string in default language
+	 * @return string Translated into selected language string
+	 */
 	public function __($string)
 	{
-		return $string;// TODO
+		return $string;
 	}
 	
 	/**
@@ -282,7 +355,11 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 */
 	public function setScriptName($name)
 	{
-		$this->_scriptName = (string) $name;
+		$this->_log(__FUNCTION__ . '(' . $name . ') string ' . self::BLOCK_DUMMY . ' will be ignored');
+		if ($name != self::BLOCK_DUMMY) {
+			$this->_scriptName = (string) $name;
+		}
+		
 		return $this;
 	}
 	
@@ -293,6 +370,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 */
 	public function getScriptName()
 	{
+		$this->_log(__FUNCTION__ . '()');
 		if (null === $this->_scriptName) {
 			require_once 'Zend/Controller/Action/HelperBroker.php';
 			$viewSuffix = Zend_Controller_Action_HelperBroker::getStaticHelper('viewRenderer')->getViewSuffix();
@@ -319,17 +397,20 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 */
 	public function setBlockName($name)
 	{
+		$this->_log(__FUNCTION__ . '(' . $name . ')');
 		$this->_blockName = $name;
 		return $this;
 	}
 	
 	/**
 	 * Get block name
+	 * Create from class name if not defined
 	 * 
 	 * @return string
 	 */
 	public function getBlockName()
 	{
+		$this->_log(__FUNCTION__ . '()');
 		if (null === $this->_blockName) {
 			$parts = explode('_', get_class($this));
 			unset($parts[1]);
@@ -339,9 +420,37 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 			}
 			
 			$this->setBlockName(implode('/', $parts));
+			$this->_log(__FUNCTION__ . '() creating -> ' . $this->_blockName);
 		}
 		
 		return $this->_blockName;
+	}
+	
+	/**
+	 * Set block placement relative to arent
+	 * 
+	 * @param  string $placement
+	 * @return Core_Block_View
+	 */
+	public function setBlockPlacement($placement)
+	{
+		$this->_log(__FUNCTION__ . '(' . $placement . ')');
+		if (in_array($placement, $this->_blockAvailablePlacements)) {
+			$this->_blockPlacment = $placement;
+		}
+		
+		return $this;
+	}
+	
+	/**
+	 * Get block placement
+	 * 
+	 * @return string
+	 */
+	public function getBlockPlacement()
+	{
+		$this->_log(__FUNCTION__ . '(' . $this->_blockPlacment . ')');
+		return $this->_blockPlacment;
 	}
 	
 	/**
@@ -352,6 +461,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 */
 	public function setBlockParent(Core_Block_View $parent)
 	{
+		$this->_log(__FUNCTION__ . '(' . get_class($parent) . ')');
 		$this->_blockParent = $parent;
 		return $this;
 	}
@@ -363,6 +473,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 */
 	public function getBlockParent()
 	{
+		$this->_log(__FUNCTION__ . '()');
 		return $this->_blockParent;
 	}
 	
@@ -374,6 +485,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 */
 	public function setBlockChilds(array $childs, $placement = self::BLOCK_PLACEMENT_AFTER)
 	{
+		$this->_log(__FUNCTION__ . '(' . gettype($childs) . ', ' . $placement . ')');
 		$this->_blockChilds = array();
 		$this->addBlockChilds($childs, $placement);
 		return $this;
@@ -386,8 +498,21 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 */
 	public function getBlockChilds($placement = null)
 	{
+		$this->_log(__FUNCTION__ . '(' . $placement . ')');
 		if (null !== $placement) {
-			return (array) $this->_blockChilds[$placement];
+			if (!in_array($placement, $this->_blockAvailablePlacements)) {
+				$this->_log(__FUNCTION__ . '(' . $placement . ') invalid placement -> return empty list');
+				return array();
+			}
+			
+			$blocks = array();
+			foreach ($this->_blockChilds as $name => $block) {
+				if ($block->getBlockPlacement() == $placement) {
+					$blocks[$name] = $block;
+				}
+			}
+			
+			return $blocks;
 		}
 		
 		return $this->_blockChilds;
@@ -401,6 +526,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 */
 	public function addBlockChilds(array $childs, $placement = self::BLOCK_PLACEMENT_AFTER)
 	{
+		$this->_log(__FUNCTION__ . '(' . gettype($childs) . ', ' . $placement . ')');
 		foreach ($childs as $name => $child) {
 			if ($child instanceof Core_Block_View) {
 				$this->addBlockChild($child, $placement);
@@ -427,16 +553,21 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 */
 	public function addBlockChild($child, $placement = self::BLOCK_PLACEMENT_AFTER)
 	{
-		if (null === $placement) {
+		$this->_log(__FUNCTION__ . '(' . gettype($child) . ', ' . $placement . ')');
+		if (null === $placement || !in_array($placement, $this->_blockAvailablePlacements)) {
 			$placement = self::BLOCK_PLACEMENT_AFTER;
 		}
 		
 		if ($child instanceof Core_Block_View) {
 			$child->setBlockParent($this);
-			$this->_blockChilds[$placement][$child->getBlockName()] = $child;
+			$child->setBlockPlacement($placement);
+			$this->_blockChilds[$child->getBlockName()] = $child;
 		} else if (is_array($child)) {
 			if (!isset($child['type'])) {
-				throw new Exception("Block options must have type");
+				require_once 'Core/Block/Exception.php';
+				$e = new Core_Block_Exception("Block options must have type");
+				$e->setView($this);
+				throw $e;
 			}
 			
 			$className = ucfirst(Zend_Filter::filterStatic($child['type'], 'Word_DashToCamelCase'));
@@ -451,7 +582,8 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 			unset($child['type']);
 			$class = new $className($child);
 			$class->setBlockParent($this);
-			$this->_blockChilds[$placement][$class->getBlockName()] = $class;
+			$child->setBlockPlacement($placement);
+			$this->_blockChilds[$class->getBlockName()] = $class;
 		}
 		
 		return $this;
@@ -463,18 +595,10 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 * @param  string $name
 	 * @return null|Core_Block_View
 	 */
-	public function getBlockChild($name, $placement = null)
+	public function getBlockChild($name)
 	{
-		if (null === $placement) {
-			$placement = self::BLOCK_PLACEMENT_AFTER;
-		}
-		
-		return $this->_blockChilds[$placement][$name];
-	}
-	
-	public function getBlockChildPlacements()
-	{
-		return array_keys($this->_blockChilds);
+		$this->_log(__FUNCTION__ . '(' . $name . ')');
+		return $this->_blockChilds[$name];
 	}
 	
 	/**
@@ -483,18 +607,11 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 * @param  string $name
 	 * @return Core_Block_View
 	 */
-	public function delBlockChild($name, $placement = null)
+	public function delBlockChild($name)
 	{
-		if (null === $placement) {
-			foreach ($this->_blockChilds as $placement => $blocks) {
-				$this->_blockChilds[$placement][$name] = null;
-				unset($this->_blockChilds[$placement][$name]);
-			}
-		} else {
-			$this->_blockChilds[$placement][$name] = null;
-			unset($this->_blockChilds[$placement][$name]);
-		}
-		
+		$this->_log(__FUNCTION__ . '(' . $name . ')');
+		$this->_blockChilds[$name] = null;
+		unset($this->_blockChilds[$name]);
 		return $this;
 	}
 	
@@ -506,7 +623,8 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 */
 	public function setRendered($flag = false)
 	{
-		//$this->_rendered = (bool) $flag;
+		$this->_log(__FUNCTION__ . '(' . var_export((bool) $flag, true) . ')');
+		$this->_rendered = (bool) $flag;
 		return $this;
 	}
 	
@@ -517,22 +635,28 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 */
 	public function isRendered()
 	{
+		$this->_log(__FUNCTION__ . '() = ' . var_export($this->_rendered, true));
 		return $this->_rendered;
 	}
 	
-	public function setRequest(Zend_Controller_Request_Abstract $request)
-	{
-		$this->_request = $request;
-		return $this;
-	}
-	
+	/**
+	 * Get front controller request object
+	 * 
+	 * @return Zend_Controller_Request_Http
+	 */
 	public function getRequest()
 	{
-		if (null === $this->_request) {
-			$this->setRequest(Zend_Controller_Front::getInstance()->getRequest());
-		}
-		
-		return $this->_request;
+		return Zend_Controller_Front::getInstance()->getRequest();
+	}
+	
+	/**
+	 * Get front controller response
+	 * 
+	 * @return Zend_Controller_Response_Abstract
+	 */
+	public function getResponse()
+	{
+		return Zend_Controller_Front::getInstance()->getResponse();
 	}
 	
 	/**
@@ -541,6 +665,9 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	public function init()
 	{}
 	
+	/**
+	 * Direct before render initializations
+	 */
 	public function preRender()
 	{}
 	
@@ -559,47 +686,36 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
     }
     
     /**
-     * Set enabling highlighter flag
+     * Set new logger instance
      * 
-     * @param  boolean $flag
+     * @param  array|Zend_Log $logger
      * @return Core_Block_View
      */
-    public function setHighlighterEnabled($flag = true)
+    public function setLogger($logger)
     {
-    	$this->_highligterEnabled = (bool) $flag;
+    	if (is_array($logger)) {
+    		$logger = Zend_Log::factory($logger);
+    	}
+    	
+    	if ($logger instanceof Zend_Log) {
+    		self::$_logger = $logger;
+    	}
+    	
     	return $this;
     }
     
     /**
-     * Check if enabling highlighter flag set
+     * Gets logger instance
      * 
-     * @return boolean
+     * @return Zend_Log
      */
-    public function isHighlighterEnabled()
+    public function getLogger()
     {
-    	return $this->_highligterEnabled;
-    }
-	
-    /**
-     * Set highlighter css options
-     * 
-     * @param  array $css
-     * @return Core_Block_View
-     */
-    public function setHighlighterCss(array $css)
-    {
-    	$this->_highliterCss = $css;
-    	return $this;
-    }
-
-    /**
-     * Get highlighter css options
-     * 
-     * @return array
-     */
-    public function getHighlighterCss()
-    {
-    	return $this->_highliterCss;
+    	if (null === self::$_logger) {
+    		self::$_logger = false;
+    	}
+    	
+    	return self::$_logger;
     }
     
     /**
@@ -658,8 +774,9 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
      * 
      * @param Zend_Cache_Core $core
      */
-    public static function setCache(Zend_Cache_Core $core)
+    public function setCache(Zend_Cache_Core $core)
     {
+    	$this->_log(__FUNCTION__ . '(' . get_class($core) . ')');
     	self::$_cache = $core;
     }
     
@@ -668,33 +785,59 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
      * 
      * @return Zend_Cache_Core
      */
-    public static function getCache()
+    public function getCache()
     {
+    	$this->_log(__FUNCTION__ . '() = ' . (gettype(self::$_cache) == "object" ? get_class(self::$_cache) : var_export(self::$_cache, true)));
+    	if (null === self::$_cache) {
+    		$this->_log(__FUNCTION__ . '() try to instantiate from Zend_Registry');
+    		if (Zend_Registry::isRegistered('Zend_Cache_Manager')) {
+    			self::$_cache = Zend_Registry::get('Zend_Cache_Manager')->getCache(self::BLOCK_CACHEMANAGER_KEY);
+    		}
+	    	
+	    	if (!(self::$_cache instanceof Zend_Cache_Core)) {
+	    		$this->_log(__FUNCTION__ . '() instantiate from Zend_Registry failed, set to FALSE for prevent second iteration');
+	    		self::$_cache = false;
+	    	}
+    	}
+    	
+    	
     	return self::$_cache;
     }
     
-    public function setUseCache($flag = true)
+    /**
+     * Set local use cache
+     * 
+     * @param  string $flag
+     * @return Core_Block_View
+     */
+    public function setCacheable($flag = true)
     {
-    	$this->_useCache = (bool) $flag;
+    	$this->_log(__FUNCTION__ . '(' . var_export((bool) $flag, true) . ')');
+    	$this->_cacheable = (bool) $flag;
     	return $this;
     }
     
-    public function isUseCache()
+    /**
+     * Check if localy cache s enabled
+     * 
+     * @return boolean
+     */
+    public function isCacheable()
     {
-    	return $this->_useCache;
+    	$this->_log(__FUNCTION__ . '() = ' . var_export($this->_cacheable, true));
+    	return $this->_cacheable;
     }
     
-    public function getCacheId(Core_Block_View $block)
+    /**
+     * Generate cache id
+     * 
+     * @return string
+     */
+    public function getCacheId()
     {
-    	//return get_class($block);
-    	$parts = explode('/', $block->getBlockName());
-    	$namespace = Core::useFilter($parts[0], 'Zend_Filter_Word_DashToCamelCase');
-    	$parts[0] = 'Block';
-    	foreach ($parts as &$part) {
-    		$part = Core::useFilter($part, 'Zend_Filter_Word_DashToCamelCase');
-    	}
-    	
-    	return $namespace . '_' . implode('_', $parts);
+    	$id = get_class($this) . '_' . md5(serialize($this));
+    	$this->_log(__FUNCTION__ . '() = ' . $id);
+    	return $id;
     }
     
     /**
@@ -706,7 +849,9 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
      */
     public function __call($method, $args)
     {
-   		$result = call_user_func_array(array($this->getEngine(), $method), $args);
+    	$this->_log('getEngine()->' . $method . '()');
+    	
+    	$result = call_user_func_array(array($this->getEngine(), $method), $args);
    		if ($result instanceof Zend_View_Abstract) {
    			return $this;
    		}
@@ -720,7 +865,10 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
      * 
      * @param mixed $key
      */
-    public function __get($key){}
+    public function __get($key)
+    {
+    	return $this->getEngine()->__get($key);
+    }
 
     /**
      * Set new property
@@ -730,12 +878,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
      */
     public function __set($key, $val)
     {
-    	if ($this->_validateAssign($key)) {
-    		$this->$key = $val;
-    		return;
-    	}
-    	
-    	$this->_throwViewException('Setting private or protected class members is not allowed');
+    	return $this->getEngine()->__set($key, $val);
     }
 
     /**
@@ -746,11 +889,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
      */
     public function __isset($key)
     {
-    	if ($this->_validateAssign($key)) {
-    		return isset($this->$key);
-    	}
-    	
-    	return false;
+    	return $this->getEngine()->__isset($key);
     }
 
     /**
@@ -760,9 +899,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
      */
     public function __unset($key)
     {
-    	if ($this->_validateAssign($key) && isset($this->$key)) {
-    		unset($this->$key);
-    	}
+    	$this->getEngine()->__unset($key);
     }
     
     /**
@@ -774,29 +911,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
      */
     public function assign($spec, $value = null)
     {
-    	if (is_string($spec)) {
-    		if (!$this->_validateAssign($spec)) {
-    			$this->_throwViewException('Setting private or protected class members is not allowed');
-    		}
-    		
-    		$this->$spec = $value;
-    	} elseif (is_array($spec)) {
-    		$error = false;
-    		foreach ($spec as $key => $val) {
-    			if (!$this->_validateAssign($key)) {
-    				$error = true;
-    				break;
-    			}
-    			$this->$key = $val;
-    		}
-    		
-    	    if ($error) {
-    			$this->_throwViewException('Setting private or protected class members is not allowed');
-    		}
-    	} else {
-    		$this->_throwViewException('assign() expects a string or array, received ' . gettype($spec));
-    	}
-    	
+    	$this->getEngine()->assign($spec, $value);
     	return $this;
     }
 
@@ -807,14 +922,33 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
      */
     public function clearVars()
     {
-        $vars = get_object_vars($this);
-        foreach ($vars as $key => $value) {
-            if ($this->_validateAssign($key)) {
-                unset($this->$key);
-            }
-        }
-    	
+        $this->getEngine()->clearVars();
     	return $this;
+    }
+    
+    /**
+     * Render only blocks of specified placement
+     * 
+     * @param  string $placement
+     * @return string
+     */
+    public function renderBlockChilds($placement = null)
+    {
+    	$this->_log(__FUNCTION__ . '(' . $placement . ')');
+    	
+    	$response = '';
+    	if (!in_array($placement, $this->_blockAvailablePlacements)) {
+    		$this->_log(__FUNCTION__ . '(' . $placement . ') invalid placement', Zend_Log::WARN);
+    		return $response;
+    	}
+    	
+    	foreach ($this->getBlockChilds($placement) as $block) {
+    		if (!$block->isRendered()) {
+    			$response .= $block->render(self::BLOCK_DUMMY);
+    		}
+    	}
+    	
+    	return $response;
     }
 
     /**
@@ -825,16 +959,19 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
      */
     public function render($name)
     {
+    	$this->_log(__FUNCTION__ . '(' . $name . ')');
     	if ($this->isRendered()) {
     		//return '';
     	}
     	
     	$exceptions = array();
-    	if ('DUMMY' !== $name) {
-    		$this->setScriptName($name);
-    	}
+    	$this->setScriptName($name);
     	
-    	if (get_class($this) == 'Core_Block_View') {
+    	$this->_log(__FUNCTION__ . "(" . $name . ") try to use 'BLOCK' rendering strategy");
+    	if (($html = $this->_findAndRenderBlock())) {
+    		return $html;
+    	}
+    	/*if (get_class($this) == 'Core_Block_View') {
     		$names = $this->_getBlockNames();
     		foreach ($names as $blockName) {
 	    		try {
@@ -845,45 +982,43 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	    			$exceptions[] = $e->getMessage();
 	    		}
     		}
-    	}
+    	}*/
     	
-    	$this->_renderBlocksToLayout();
-   		
-   		$response = '';
-   		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);
-   		
+   		$this->_log(__FUNCTION__ . "(" . $name . ") 'BLOCK' strategy failed, try to use 'TEMPLATE' rendering strategy", Zend_Log::WARN);
    		try {
-   			$cacheId = $this->getCacheId($this);
-   			if (null !== self::getCache() && $this->isUseCache() && self::getCache()->test($cacheId)) {
-   				$script = self::getCache()->load($cacheId);
+   			$cacheId = $this->_cacheId();
+   			if (!$this->_cacheTest($cacheId)) {
+   				$file = $this->_getScriptFile();
+   				$this->preRender();
+   				
+   				$this->_log(__FUNCTION__ . "(" . $name . ") !!! OB_START !!!");
+   				ob_start();
+   				include $file;
+   				$script = ob_get_clean();
+   				$this->_log(__FUNCTION__ . "(" . $name . ") !!! OB_GET_CLEAN !!!");
+   				 
+   				$this->_cacheSave($script, $cacheId);
    			} else {
-	   			$file = $this->_getScriptFile();
-	   			$this->preRender();
-	    		
-		    	ob_start();
-	    		include $file;
-	    		$script = ob_get_clean();
-	    		
-	    		$this->setRendered(true);
-	    		if (null !== self::getCache() && $this->isUseCache()) {
-	    			self::getCache()->save($script, $cacheId);
-	    		}
+   				$script = $this->_cacheLoad($cacheId);
    			}
    			
-    		$response .= $this->_renderHighliter($file) . $script;
-    	} catch (Exception $e) {
-    		$exceptions[] = $e->getMessage();
+    		//$response .= $script;
+    	} catch (Exception $ex) {
+    		$this->_log(__FUNCTION__ . "(" . $name . ") render failed throw exception if block hasn't childs", Zend_Log::WARN);
     		if (count($this->getBlockChilds()) == 0) {
-    			require_once 'Zend/View/Exception.php';
-				$ve = new Zend_View_Exception(implode(" OR\n", $exceptions));
-				$ve->setView($this);
-				throw $ve;
-				$response .= $ve->getMessage();
+    			require_once 'Core/Block/Exception.php';
+    			$e = new Core_Block_Exception($ex->getMessage());
+    			$e->setView($this);
+    			throw $e;
     		}
     	}
     	
-    	$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_AFTER);
-    	return $response;
+    	$this->_log(__FUNCTION__ . "(" . $name . ") 'TEMPLATE' rendering strategy complete");
+    	$this->setRendered(true);
+    	
+    	return $this->renderBlockChilds(self::BLOCK_PLACEMENT_BEFORE)
+    	     . $script
+    	     . $this->renderBlockChilds(self::BLOCK_PLACEMENT_AFTER);
     }
     
     /**
@@ -893,6 +1028,14 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
      */
     public function __toString()
     {
-    	return $this->render('DUMMY'); // REQUIRED by interface
+    	return $this->render(self::BLOCK_DUMMY);
     }
+    
+    /**
+     * Converts all variables to array representation
+     * 
+     * @return array();
+     */
+    public function toArray()
+    {}
 }

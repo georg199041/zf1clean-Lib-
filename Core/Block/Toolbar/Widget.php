@@ -184,7 +184,7 @@ class Core_Block_Toolbar_Widget extends Core_Block_View
 	public function render($name)
 	{
    		$response = '';
-   		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_BEFORE);
+   		$response .= $this->renderBlockChilds(self::BLOCK_PLACEMENT_BEFORE);
 		
 		try {
 			$this->setRendered(true);
@@ -199,7 +199,7 @@ class Core_Block_Toolbar_Widget extends Core_Block_View
 			$response .= $e->getMessage();
 		}
     	
-		$response .= $this->_renderBlocks(self::BLOCK_PLACEMENT_AFTER);
+		$response .= $this->renderBlockChilds(self::BLOCK_PLACEMENT_AFTER);
     	return $response;
 	}
 }
