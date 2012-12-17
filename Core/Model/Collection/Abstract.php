@@ -1,17 +1,37 @@
 <?php
-
 /**
- * Base collection
- * 
- * Be careful when iterate over foreach loop with pass value as reference
- * use each method of collection
+ * Zend Framework
  *
- * @author     Pavlenko Evgeniy
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
  * @category   Core
  * @package    Core_Model
- * @version    1.1
- * @subpackage Collection
- * @copyright  Copyright (c) 2012 SunNY Creative Technologies. (http://www.sunny.net)
+ * @subpackage Core_Model_Collection
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Abstract.php 24218 2011-07-10 01:22:58Z ramon $
+ */
+
+/**
+ * @see Core_Model_Collection_Exception
+ */
+require_once "Core/Model/Collection/Exception.php";
+
+/**
+ * Base collection class
+ *
+ * @category   Core
+ * @package    Core_Model
+ * @subpackage Core_Model_Collection
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Core_Model_Collection_Abstract implements Iterator, Countable, ArrayAccess
@@ -42,31 +62,56 @@ class Core_Model_Collection_Abstract implements Iterator, Countable, ArrayAccess
 		}
 	}
 	
+	/**
+	 * Search implementation (via magic method)
+	 * 
+	 * @param  string $method
+	 * @param  array  $arguments
+	 * @throws Core_Model_Collection_Exception If invalid method called
+	 */
 	public function __call($method, $arguments)
 	{
 		if (@preg_match('/(find(?:One|All)?By)(.+)/', $method, $match)) {
 			return $this->{$match[1]}($match[2], $arguments[0]);
 		}
         
-		require_once 'Zend/Db/Table/Row/Exception.php';
-        throw new Zend_Db_Table_Row_Exception("Unrecognized method '$method()'");
+		throw new Core_Model_Collection_Exception("Unrecognized method '$method()'");
 	}
 
+	/**
+	 * Populate mapper object
+	 * 
+	 * @param  Core_Model_Mapper_Abstract $mapper
+	 * @return Core_Model_Collection_Abstract
+	 */
 	public function setMapper(Core_Model_Mapper_Abstract $mapper)
 	{
 		$this->_mapper = $mapper;
 		return $this;
 	}
 	
+	/**
+	 * Get mapper object
+	 * 
+	 * @throws Core_Model_Collection_Exception If mapper is not setted
+	 * @return Core_Model_Mapper_Abstract
+	 */
 	public function getMapper()
 	{
 		if (null === $this->_mapper) {
-			throw new Exception("Collection self-operarions can't use without mapper object");
+			throw new Core_Model_Collection_Exception("Collection self-operarions can't use without mapper object");
 		}
 	
 		return $this->_mapper;
 	}
 	
+	/**
+	 * Search entity by specified field value
+	 * 
+	 * @param  string $key
+	 * @param  mixed  $value
+	 * @return boolean|Core_Model_Entity_Abstract
+	 */
 	public function findOneBy($key, $value)
 	{
 		foreach ($this->_data as $row) {
@@ -79,6 +124,13 @@ class Core_Model_Collection_Abstract implements Iterator, Countable, ArrayAccess
 		return false;
 	}
 	
+	/**
+	 * Find Collection of items by specified field value
+	 * 
+	 * @param  string $key
+	 * @param  mixed  $value
+	 * @return Core_Model_Collection_Abstract
+	 */
 	public function findAllBy($key, $value)
 	{
 		$collection = clone $this;
@@ -93,6 +145,11 @@ class Core_Model_Collection_Abstract implements Iterator, Countable, ArrayAccess
 		return $collection;
 	}
 	
+	/**
+	 * Clear collection items list
+	 * 
+	 * @return Core_Model_Collection_Abstract
+	 */
 	public function clear()
 	{
 		$this->_data = array();
@@ -233,7 +290,9 @@ class Core_Model_Collection_Abstract implements Iterator, Countable, ArrayAccess
 	/**
 	 * Sort an array and maintain index association
 	 * 
-	 * @param boolean $reverse Use reverse sorting
+	 * @param  string  $flags   Sorting flags like in asort() function
+	 * @param  boolean $reverse Use reverse sorting
+	 * @return Core_Model_Collection_Abstract
 	 */
 	public function asort($flags = SORT_REGULAR, $reverse = false)
 	{
@@ -251,7 +310,9 @@ class Core_Model_Collection_Abstract implements Iterator, Countable, ArrayAccess
 	/**
 	 * Sort an array by key
 	 * 
-	 * @param boolean $reverse Use reverse sorting
+	 * @param  string  $flags   Sorting flags like in asort() function
+	 * @param  boolean $reverse Use reverse sorting
+	 * @return Core_Model_Collection_Abstract
 	 */
 	public function ksort($flags = SORT_REGULAR, $reverse = false)
 	{
@@ -266,6 +327,11 @@ class Core_Model_Collection_Abstract implements Iterator, Countable, ArrayAccess
 		return $this;
 	}
 	
+	/**
+	 * Convert collection data to array representation
+	 * 
+	 * @return array
+	 */
 	public function toArray()
 	{
 		$return = array();
@@ -285,7 +351,8 @@ class Core_Model_Collection_Abstract implements Iterator, Countable, ArrayAccess
 	 * and maintain index association
 	 * 
 	 * @param  mixed $callable
-	 * @throws InvalidArgumentException
+	 * @throws InvalidArgumentException If not callable object passed
+	 * @return Core_Model_Collection_Abstract
 	 */
 	public function uasort($callable)
 	{
@@ -301,7 +368,8 @@ class Core_Model_Collection_Abstract implements Iterator, Countable, ArrayAccess
 	 * Sort an array by keys using a user-defined comparison function
 	 * 
 	 * @param  mixed $callable
-	 * @throws InvalidArgumentException
+	 * @throws InvalidArgumentException If not callable object passed
+	 * @return Core_Model_Collection_Abstract
 	 */
 	public function uksort($callable)
 	{
@@ -314,8 +382,12 @@ class Core_Model_Collection_Abstract implements Iterator, Countable, ArrayAccess
 	}
 	
 	/**
+	 * Check index exists
+	 * 
 	 * (non-PHPdoc)
 	 * @see ArrayAccess::offsetExists()
+	 * @param  int $offset
+	 * @return mixed
 	 */
 	public function offsetExists($offset)
 	{
@@ -323,8 +395,12 @@ class Core_Model_Collection_Abstract implements Iterator, Countable, ArrayAccess
 	}
 	
 	/**
+	 * Get row from collection by specified index
+	 * 
 	 * (non-PHPdoc)
 	 * @see ArrayAccess::offsetGet()
+	 * @param  int $offset
+	 * @return mixed
 	 */
 	public function offsetGet($offset)
 	{
@@ -332,8 +408,12 @@ class Core_Model_Collection_Abstract implements Iterator, Countable, ArrayAccess
 	}
 	
 	/**
+	 * Set row data to specified index
+	 * 
 	 * (non-PHPdoc)
 	 * @see ArrayAccess::offsetSet()
+	 * @param  int   $offset
+	 * @param  mixed $value
 	 */
 	public function offsetSet($offset, $value)
 	{
@@ -345,8 +425,11 @@ class Core_Model_Collection_Abstract implements Iterator, Countable, ArrayAccess
 	}
 	
 	/**
+	 * Delete row by specified index
+	 * 
 	 * (non-PHPdoc)
 	 * @see ArrayAccess::offsetUnset()
+	 * @param int $offset
 	 */
 	public function offsetUnset($offset)
 	{

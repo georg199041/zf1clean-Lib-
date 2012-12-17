@@ -1,15 +1,4 @@
 <?php
-
-/**
- * @see Zend_View_Interface
- */
-require_once "Zend/View/Interface.php";
-
-/**
- * @see Core_Attributes
- */
-require_once "Core/Attributes.php";
-
 /**
  * Zend Framework
  *
@@ -27,7 +16,26 @@ require_once "Core/Attributes.php";
  * @package    Core_Block
  * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: View.php 0.1 2012-12-12 pavlenko $
+ * @version    $Id: View.php 24218 2011-07-10 01:22:58Z ramon $
+ */
+
+/**
+ * @see Zend_View_Interface
+ */
+require_once "Zend/View/Interface.php";
+
+/**
+ * @see Core_Attributes
+ */
+require_once "Core/Attributes.php";
+
+/**
+ * Block templating strategy view engine
+ * 
+ * @category   Core
+ * @package    Core_Block
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 {
@@ -429,7 +437,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	/**
 	 * Set block placement relative to arent
 	 * 
-	 * @param  string $placement
+	 * @param  string $placement Blocks pacement name
 	 * @return Core_Block_View
 	 */
 	public function setBlockPlacement($placement)
@@ -480,7 +488,8 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	/**
 	 * Set childs blocks
 	 * 
-	 * @param  array $childs
+	 * @param  array  $childs    Blocks list to set
+	 * @param  string $placement Blocks pacement name
 	 * @return Core_Block_View
 	 */
 	public function setBlockChilds(array $childs, $placement = self::BLOCK_PLACEMENT_AFTER)
@@ -494,6 +503,7 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	/**
 	 * Get childs blocks
 	 * 
+	 * @param  string $placement Blocks pacement name
 	 * @return array
 	 */
 	public function getBlockChilds($placement = null)
@@ -521,7 +531,8 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	/**
 	 * Add childs blocks
 	 * 
-	 * @param  array $childs
+	 * @param  array  $childs    Block list to add
+	 * @param  string $placement Blocks pacement name
 	 * @return Core_Block_View
 	 */
 	public function addBlockChilds(array $childs, $placement = self::BLOCK_PLACEMENT_AFTER)
@@ -545,9 +556,8 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	/**
 	 * Add single child block
 	 * 
-	 * @param  string|Core_View_Block $child
-	 * @param  string                 $name
-	 * @param  array                  $options [OPTIONAL]
+	 * @param  string|Core_View_Block $child     Block to add
+	 * @param  string                 $placement Block placement
 	 * @throws Exception If not found
 	 * @return Core_Block_View
 	 */
@@ -576,7 +586,10 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 			}
 			
 			if (!@class_exists($className, true)) {
-				throw new Exception("Class '$className' not found");
+				require_once 'Core/Block/Exception.php';
+				$e = Core_Block_Exception("Class '$className' not found");
+				$e->setView($this);
+				throw $e;
 			}
 			
 			unset($child['type']);

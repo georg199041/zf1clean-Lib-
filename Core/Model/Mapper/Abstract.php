@@ -1,5 +1,34 @@
 <?php
+/**
+ * Zend Framework
+ *
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Core
+ * @package    Core_Model
+ * @subpackage Core_Model_Mapper
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Abstract.php 24218 2011-07-10 01:22:58Z ramon $
+ */
 
+/**
+ * Base mapper class
+ *
+ * @category   Core
+ * @package    Core_Model
+ * @subpackage Core_Model_Mapper
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ */
 abstract class Core_Model_Mapper_Abstract
 {
 	/**
@@ -145,7 +174,8 @@ abstract class Core_Model_Mapper_Abstract
 	/**
 	 * Set new current class name
 	 * 
-	 * @param string $name
+	 * @param  string $name
+	 * @return Core_Model_Mapper_Abstract
 	 */
 	public function setClassName($name)
 	{
@@ -170,7 +200,8 @@ abstract class Core_Model_Mapper_Abstract
 	/**
 	 * Set new source class name
 	 * 
-	 * @param string $name
+	 * @param  string $name
+	 * @return Core_Model_Mapper_Abstract
 	 */
 	public function setSourceClassName($name)
 	{
@@ -195,7 +226,8 @@ abstract class Core_Model_Mapper_Abstract
 	/**
 	 * Set new collection class name
 	 *
-	 * @param string $name
+	 * @param  string $name
+	 * @return Core_Model_Mapper_Abstract
 	 */
 	public function setCollectionClassName($name)
 	{
@@ -220,7 +252,8 @@ abstract class Core_Model_Mapper_Abstract
 	/**
 	 * Set new entity class name
 	 *
-	 * @param string $name
+	 * @param  string $name
+	 * @return Core_Model_Mapper_Abstract
 	 */
 	public function setEntityClassName($name)
 	{
@@ -231,7 +264,8 @@ abstract class Core_Model_Mapper_Abstract
 	/**
 	 * Set source object
 	 * 
-	 * @param Core_Model_Source_Abstract $source Data source object
+	 * @param  Core_Model_Source_Interface $source Data source object
+	 * @return Core_Model_Mapper_Abstract
 	 */
     public function setSource(Core_Model_Source_Interface $source)
     {
@@ -286,7 +320,7 @@ abstract class Core_Model_Mapper_Abstract
 	 * Save all collection entities
 	 * 
 	 * @param  Core_Model_Collection_Abstract $collection
-	 * @throws Exception
+	 * @throws Exception If Collection save fails
 	 * @return Core_Model_Mapper_Abstract
 	 */
 	public function saveCollection(Core_Model_Collection_Abstract $collection)
@@ -312,7 +346,8 @@ abstract class Core_Model_Mapper_Abstract
 	/**
 	 * Save entity
 	 * 
-	 * @param Core_Model_Entity_Abstract $entity
+	 * @param  Core_Model_Entity_Abstract $entity
+	 * @return Core_Model_Mapper_Abstract
 	 */
 	public function save(Core_Model_Entity_Abstract $entity)
 	{
@@ -377,7 +412,7 @@ abstract class Core_Model_Mapper_Abstract
 	 * Find entity by pk value
 	 * 
 	 * @param  numeric $id
-	 * @return null|Core_Model_Entity_Abstract
+	 * @return Core_Model_Entity_Abstract
 	 */
 	public function find($id)
 	{
@@ -416,9 +451,9 @@ abstract class Core_Model_Mapper_Abstract
 	/**
 	 * Fetch single row
 	 * 
-	 * @param array $where
-	 * @param string|array $order
-	 * @return null|Core_Model_Entity_Abstract
+	 * @param  array $where
+	 * @param  string|array $order
+	 * @return Core_Model_Entity_Abstract
 	 */
 	public function fetchRow(array $where = null, $order = null)
 	{
@@ -437,10 +472,10 @@ abstract class Core_Model_Mapper_Abstract
 	/**
 	 * Fetch collection
 	 * 
-	 * @param array $where
-	 * @param string|array $order
-	 * @param integer $count
-	 * @param integer $offset
+	 * @param  array $where
+	 * @param  string|array $order
+	 * @param  integer $count
+	 * @param  integer $offset
 	 * @return Core_Model_Collection_Abstract
 	 */
 	public function fetchAll(array $where = null, $order = null, $count = null, $offset = null)
@@ -481,10 +516,10 @@ abstract class Core_Model_Mapper_Abstract
 	/**
 	 * Fetch rows for tree like data structure
 	 * 
-	 * @param array $where
-	 * @param array|string $order
-	 * @param integer|null $depth
-	 * @param array $options
+	 * @param  array $where
+	 * @param  array|string $order
+	 * @param  integer|null $depth
+	 * @param  array $options
 	 * @return Core_Model_Collection_Abstract
 	 */
 	public function fetchTree(array $where = null, $order = null, $depth = null, array $options = array())
@@ -511,6 +546,13 @@ abstract class Core_Model_Mapper_Abstract
 		return $collection;
 	}
 	
+	/**
+	 * Preformat branch data
+	 * 
+	 * @param  Core_Model_Collection_Abstract $collection
+	 * @param  array $options
+	 * @return Core_Model_Entity_Abstract
+	 */
 	public function formatBranch($collection, $options)
 	{
 		do {
@@ -524,6 +566,14 @@ abstract class Core_Model_Mapper_Abstract
 		return $parent;
 	}
 	
+	/**
+	 * Fetch parents branch collection
+	 * 
+	 * @param  array $where
+	 * @param  string|array $order
+	 * @param  array $options
+	 * @return Core_Model_Entity_Abstract
+	 */
 	public function fetchBranch(array $where = null, $order = null, array $options = array())
 	{
 		$required = array(
@@ -574,10 +624,10 @@ abstract class Core_Model_Mapper_Abstract
 	/**
 	 * Fetch only pk fields
 	 * 
-	 * @param array $where
-	 * @param string|array $order
-	 * @param integer $count
-	 * @param integer $offset
+	 * @param  array $where
+	 * @param  string|array $order
+	 * @param  integer $count
+	 * @param  integer $offset
 	 * @return array
 	 */
 	public function fetchPrimaryAll(array $where = null, $order = null, $count = null, $offset = null)

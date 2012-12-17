@@ -13,8 +13,8 @@
  * to license@zend.com so we can send you a copy immediately.
  *
  * @category   Core
- * @package    Core_Cache
- * @subpackage Core_Cache_Frontend
+ * @package    Core_Image
+ * @subpackage Core_Image_Cache_Frontend
  * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @version    $Id: Image.php 24218 2011-07-10 01:22:58Z ramon $
@@ -26,13 +26,21 @@
 require_once 'Zend/Cache/Core.php';
 
 /**
- * @package    Core_Cache
- * @subpackage Core_Cache_Frontend
+ * Image cache frontend adapter class
+ * 
+ * @category   Core
+ * @package    Core_Image
+ * @subpackage Core_Image_Cache_Frontend
  * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Core_Image_Cache_Frontend_Image extends Zend_Cache_Core
 {
+	/**
+	 * Adapter only specific options
+	 * 
+	 * @var array
+	 */
 	protected $_specificOptions = array(
 		'image_master_check_mtime' => false,
 	);
@@ -122,7 +130,7 @@ class Core_Image_Cache_Frontend_Image extends Zend_Cache_Core
 	}
 	
 	/**
-	 * Save file info COMPLETE
+	 * Save file info
 	 * 
      * @param  mixed  $data             Data (uses as id argument if single)
      * @param  string $id               [OPTIONAL] Cache id hash
@@ -163,9 +171,9 @@ class Core_Image_Cache_Frontend_Image extends Zend_Cache_Core
 	}
 	
 	/**
+	 * Remove cache record
 	 * 
-	 * 
-	 * @param unknown_type $id
+	 * @param  string $id
 	 * @return boolean
 	 */
 	public function remove($id)
@@ -185,8 +193,8 @@ class Core_Image_Cache_Frontend_Image extends Zend_Cache_Core
 	/**
 	 * Clean cache
 	 * 
-	 * @param unknown_type $mode
-	 * @param unknown_type $tags
+	 * @param  string $mode
+	 * @param  tags   $tags
 	 * @return boolean
 	 */
 	public function clean($mode = 'all', $tags = array())

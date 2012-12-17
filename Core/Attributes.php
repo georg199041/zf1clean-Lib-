@@ -13,6 +13,7 @@
  * to license@zend.com so we can send you a copy immediately.
  *
  * @category   Core
+ * @package    Core
  * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @version    $Id: Attributes.php 0.1 2012-12-12 pavlenko $
@@ -23,6 +24,7 @@
  * Can use as html element attributes aggregator and renderer
  *
  * @category   Core
+ * @package    Core
  * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */

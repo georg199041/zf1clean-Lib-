@@ -1,7 +1,44 @@
 <?php
+/**
+ * Zend Framework
+ *
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Core
+ * @package    Core_Model
+ * @subpackage Core_Model_Entity
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Exception.php 24218 2011-07-10 01:22:58Z ramon $
+ */
 
+/**
+ * @see Core_Model_Collection_Abstract
+ */
 require_once "Core/Model/Collection/Abstract.php";
 
+/**
+ * @see Core
+ */
+require_once "Core.php";
+
+/**
+ * Entity base class
+ *
+ * @category   Core
+ * @package    Core_Model
+ * @subpackage Core_Model_Entity
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ */
 class Core_Model_Entity_Abstract implements ArrayAccess
 {
 	/**
@@ -30,6 +67,7 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 * 
 	 * @param  string $key
 	 * @param  mixed $val
+	 * @return Core_Model_Entity_Abstract
 	 */
 	protected function _set($key, $val)
 	{
@@ -92,7 +130,7 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 * Methodical call all methotds
 	 * 
 	 * @param  string $method
-	 * @param  mixed $arguments
+	 * @param  mixed  $arguments
 	 * @return mixed
 	 */
 	public function __call($method, $arguments)
@@ -127,7 +165,8 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	public function getMapper()
 	{
 		if (null === $this->_mapper) {
-			throw new Exception("Entity self-operarions can't use without mapper object");
+			require_once 'Core/Model/Entity/Exception.php';
+			throw new Core_Model_Entity_Exception("Entity self-operarions can't use without mapper object");
 		}
 		
 		return $this->_mapper;
@@ -180,7 +219,8 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	/**
 	 * Set parent collection or reset collection property
 	 * 
-	 * @param Core_Model_Collection_Abstract $collection
+	 * @param  Core_Model_Collection_Abstract $collection
+	 * @return Core_Model_Entity_Abstract
 	 */
 	public function setCollection(Core_Model_Collection_Abstract $collection = null)
 	{
@@ -204,6 +244,7 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 * 
 	 * (non-PHPdoc)
 	 * @see ArrayAccess::offsetExists()
+	 * @param string $offset
 	 */
 	public function offsetExists($offset)
 	{
@@ -214,7 +255,7 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	/**
 	 * Alias of has method
 	 * 
-	 * @param  mixed $offset
+	 * @param  string $offset
 	 * @return boolean
 	 */
 	public function __isset($offset)
@@ -229,8 +270,8 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 * 
 	 * (non-PHPdoc)
 	 * @see ArrayAccess::offsetGet()
-	 * @param  mixed $offset
-	 * @return mixed|null
+	 * @param  string $offset
+	 * @return mixed
 	 */
 	public function offsetGet($offset)
 	{
@@ -241,7 +282,7 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	/**
 	 * Alias of get
 	 * 
-	 * @param  mixed $offset
+	 * @param  string $offset
 	 * @return mixed|null
 	 */
 	public function __get($offset)
@@ -256,6 +297,9 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 * 
 	 * (non-PHPdoc)
 	 * @see ArrayAccess::offsetSet()
+	 * @param  string $offset
+	 * @param  mixed  $value
+	 * @return mixed
 	 */
 	public function offsetSet($offset, $value)
 	{
@@ -281,6 +325,8 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	 * 
 	 * (non-PHPdoc)
 	 * @see ArrayAccess::offsetUnset()
+	 * @param  string $offset
+	 * @return mixed
 	 */
 	public function offsetUnset($offset)
 	{
@@ -291,7 +337,8 @@ class Core_Model_Entity_Abstract implements ArrayAccess
 	/**
 	 * Alias of uns
 	 * 
-	 * @param mixed $offset
+	 * @param  mixed $offset
+	 * @return mixed
 	 */
 	public function __unset($offset)
 	{

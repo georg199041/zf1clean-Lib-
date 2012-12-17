@@ -31,6 +31,8 @@ require_once 'Zend/Cache/Backend.php';
 require_once 'Zend/Cache/Backend/Interface.php';
 
 /**
+ * Image cache adapter backend
+ * 
  * @package    Core_Cache
  * @subpackage Core_Cache_Backend
  * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
@@ -48,6 +50,13 @@ class Core_Image_Cache_Backend_Image extends Zend_Cache_Backend implements Zend_
 		'image_processing' => array(),
     );
 	
+	/**
+	 * Save cached image metadata
+	 * 
+	 * @param  string $path
+	 * @param  array  $metadata
+	 * @return boolean
+	 */
 	protected function _saveMetadata($path, $metadata)
 	{
 		$bytes = @file_put_contents($path . '.metadata', serialize($metadata), LOCK_EX);
@@ -58,6 +67,12 @@ class Core_Image_Cache_Backend_Image extends Zend_Cache_Backend implements Zend_
 		return false;
 	}
 	
+	/**
+	 * Load cached image metadata
+	 * 
+	 * @param  string $path
+	 * @return boolean
+	 */
 	protected function _loadMetadata($path)
 	{
 		$return = @file_get_contents($path . '.metadata');
@@ -68,23 +83,40 @@ class Core_Image_Cache_Backend_Image extends Zend_Cache_Backend implements Zend_
 		return false;
 	}
 	
+	/**
+	 * Remove linked metadata
+	 * 
+	 * @param string $path
+	 */
 	public function _unlinkMetadata($path)
 	{
 		return @unlink($path . '.metadata');
 	}
 	
+	/**
+	 * Generate save path from file data
+	 * 
+	 * @param  SplFileInfo $info
+	 * @return string
+	 */
 	protected function _savePath(SplFileInfo $info)
 	{
 		return md5($info->getPath() . $info->getBasename('.' . $info->getExtension())) . '.' . $info->getExtension();
 	}
 	
+	/**
+	 * Option getter (??? no realization in parent ???)
+	 * 
+	 * @param  string $name
+	 * @return mixed
+	 */
 	public function getOption($name)
 	{
 		return $this->_options[$name];
 	}
 	
     /**
-     * Load cached file path COMPLETE
+     * Load cached file path
      * 
      * @param  string  $id                     Cache id hash
      * @param  boolean $doNotTestCacheValidity [OPTIONAL] Unused in this backend
@@ -101,7 +133,7 @@ class Core_Image_Cache_Backend_Image extends Zend_Cache_Backend implements Zend_
 	}
 
 	/**
-	 * Test cache exists COMPLETE
+	 * Test cache exists
 	 * 
 	 * @param  string $id Cache id hash
 	 * @return boolean|integer Last modified of cached file or false if not exists cache
@@ -133,13 +165,12 @@ class Core_Image_Cache_Backend_Image extends Zend_Cache_Backend implements Zend_
 	}
 	
 	/**
-	 * Save file metadata COMPLETE
+	 * Save file metadata
      * 
      * @param  mixed  $data             Mtime value
      * @param  string $id               Cache id hash
      * @param  array  $tags             [OPTIONAL] Unused in this backend
      * @param  int    $specificLifetime [OPTIONAL] Unused in this backend
-     * @param  int    $priority         [OPTIONAL] Unused in this backend
 	 * @return boolean Returns true if success
 	 */
 	public function save($data, $id, $tags = array(), $specificLifetime = false)

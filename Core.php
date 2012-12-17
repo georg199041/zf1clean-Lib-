@@ -1,5 +1,33 @@
 <?php
+/**
+ * Zend Framework
+ *
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Core
+ * @package    Core
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Core.php 0.1 2012-12-12 pavlenko $
+ */
 
+/**
+ * Application base class
+ * Basic loader method implemented here
+ *
+ * @category   Core
+ * @package    Core
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ */
 class Core
 {
 	/**
@@ -12,9 +40,10 @@ class Core
 	/**
 	 * Autoload class
 	 * 
-	 * @param  string $className
-	 * @param  boolean $singleton
-	 * @throws Exception
+	 * @param  string  $className Class name to instantiate
+	 * @param  boolean $singleton Use single instance (if true place instance to registry)
+	 * @param  mixed   $options   Instantiate options
+	 * @throws Exception If class not exists
 	 * @return object
 	 */
 	public static function getClass($className, $singleton = true, $options = null)
@@ -40,6 +69,8 @@ class Core
 	 * Autoload filter class
 	 * 
 	 * @param  string $className
+	 * @param  boolean $singleton
+	 * @return object
 	 */
 	public static function getFilter($className, $singleton = true)
 	{
@@ -49,9 +80,9 @@ class Core
 	/**
 	 * Filter value with specified filter class
 	 * 
-	 * @param  mixed $value
+	 * @param  mixed  $value
 	 * @param  string $filterClass
-	 * @return mixed
+	 * @return Zend_Filter_Inteface
 	 */
 	public static function useFilter($value, $filterClass)
 	{
@@ -81,7 +112,8 @@ class Core
 	/**
 	 * Autoload block
 	 * 
-	 * @param  string $name
+	 * @param  string  $name
+	 * @param  boolean $singleton
 	 * @return object
 	 */
 	public static function getBlock($name, $singleton = true)
@@ -113,7 +145,8 @@ class Core
 	/**
 	 * Autoload mapper
 	 * 
-	 * @param  string $name
+	 * @param  string  $name
+	 * @param  boolean $singleton
 	 * @return object
 	 */
 	public static function getMapper($name, $singleton = true)

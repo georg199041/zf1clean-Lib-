@@ -21,7 +21,7 @@
  */
 
 /**
- * @see Zend_Exception
+ * @see Core_Image_Exception
  */
 require_once 'Core/Image/Exception.php';
 

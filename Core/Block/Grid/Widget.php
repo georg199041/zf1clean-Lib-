@@ -1,33 +1,110 @@
 <?php
+/**
+ * Zend Framework
+ *
+ * LICENSE
+ *
+ * This source file is subject to the new BSD license that is bundled
+ * with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://framework.zend.com/license/new-bsd
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@zend.com so we can send you a copy immediately.
+ *
+ * @category   Core
+ * @package    Core_Block
+ * @subpackage Core_Block_Grid
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ * @version    $Id: Widget.php 0.1 2012-12-12 pavlenko $
+ */
 
+/**
+ * @see Core_Block_View
+ */
 require_once "Core/Block/View.php";
 
+/**
+ * @see Core_Block_Grid_Column_Default
+ */
+require_once 'Core/Block/Grid/Column/Default.php';
+
+/**
+ * Base grid class
+ *
+ * @category   Core
+ * @package    Core_Block
+ * @subpackage Core_Block_Grid
+ * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
+ * @license    http://framework.zend.com/license/new-bsd     New BSD License
+ */
 class Core_Block_Grid_Widget extends Core_Block_View
 {
-	const ORDER_ASC = 'ASC';
-	
+	const ORDER_ASC  = 'ASC';	
 	const ORDER_DESC = 'DESC';
 	
-	const FILTER_EQUAL = 'EQUAL';
-	
-	const FILTER_LIKE = 'LIKE';
-	
+	const FILTER_EQUAL  = 'EQUAL';	
+	const FILTER_LIKE   = 'LIKE';	
 	const FILTER_SELECT = 'SELECT';
 
-	protected $_messages = array();
+	/**
+	 * Messages
+	 * 
+	 * @var array
+	 */
+	//protected $_messages = array();
 	
+	/**
+	 * Grid name
+	 * 
+	 * @var string
+	 */
 	protected $_name;
 	
+	/**
+	 * Identity column name
+	 * 
+	 * @var string
+	 */
 	protected $_idColumnName = 'id';
 	
+	/**
+	 * Defined columns for render
+	 * 
+	 * @var array
+	 */
 	protected $_columns = array();
 	
+	/**
+	 * Column filling data
+	 * 
+	 * @var array|Iterator
+	 */
 	protected $_data;
 	
+	/**
+	 * Grid route options
+	 * 
+	 * @var array
+	 */
 	protected $_routeOptions = array();
 	
+	/**
+	 * Used route name
+	 * 
+	 * @var string
+	 */
 	protected $_routeName;
 	
+	/**
+	 * Set all options at once
+	 * 
+	 * (non-PHPdoc)
+	 * @see Core_Block_View::setOptions()
+	 * @param  array $options
+	 * @return Core_Block_Grid_Widget
+	 */
 	public function setOptions(array $options)
 	{
 		parent::setOptions($options);
@@ -42,7 +119,7 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		return $this;
 	}
 	
-	public function getMessage($name, $default = null)
+	/*public function getMessage($name, $default = null)
 	{
 		if (isset($this->_messages[$name])) {
 			return $this->_messages[$name];
@@ -55,14 +132,25 @@ class Core_Block_Grid_Widget extends Core_Block_View
 	{
 		$this->_messages[$name] = $message;
 		return $this;
-	}
+	}*/
 
+	/**
+	 * Set grid name
+	 * 
+	 * @param  string $name
+	 * @return Core_Block_Grid_Widget
+	 */
 	public function setName($name)
 	{
 		$this->_name = $name;
 		return $this;
 	}
 	
+	/**
+	 * Get (setup if need) grid name
+	 * 
+	 * @return string
+	 */
 	public function getName()
 	{
 		if (null === $this->_name) {
@@ -74,17 +162,34 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		return $this->_name;
 	}
 	
+	/**
+	 * Set identity column name
+	 * 
+	 * @param  string $name
+	 * @return Core_Block_Grid_Widget
+	 */
 	public function setIdColumnName($name)
 	{
 		$this->_idColumnName = $name;
 		return $this;
 	}
 	
+	/**
+	 * Get identity column name
+	 * 
+	 * @return string
+	 */
 	public function getIdColumnName()
 	{
 		return $this->_idColumnName;
 	}
 	
+	/**
+	 * Set all columns objects
+	 * 
+	 * @param  array $options
+	 * @return Core_Block_Grid_Widget
+	 */
 	public function setColumns(array $options)
 	{
 		$this->_columns = array();
@@ -92,16 +197,33 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		return $this;
 	}
 	
+	/**
+	 * Get column objects
+	 * 
+	 * @return array
+	 */
 	public function getColumns()
 	{
 		return $this->_columns;
 	}
 	
+	/**
+	 * Get column by name
+	 * 
+	 * @param  string $name
+	 * @return Core_Block_Grid_Column_Default
+	 */
 	public function getColumn($name)
 	{
 		return $this->_columns[$name];
 	}
 	
+	/**
+	 * Add columns list
+	 * 
+	 * @param  array $value
+	 * @return Core_Block_Grid_Widget
+	 */
 	public function addColumns(array $value)
 	{
 		foreach ($value as $key => $colOptions) {
@@ -119,6 +241,13 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		return $this;
 	}
 	
+	/**
+	 * Add single column
+	 * 
+	 * @param  array|Core_Block_Grid_Column_Default $element
+	 * @throws Core_Block_Exception If column definition invalid
+	 * @return Core_Block_Grid_Widget
+	 */
 	public function addColumn($element/*, $name = null, $options = array()*/)
 	{
 		if ($element instanceof Core_Block_Grid_Column_Default) {
@@ -135,7 +264,8 @@ class Core_Block_Grid_Widget extends Core_Block_View
 			}
 			
 			if (!@class_exists($className, true)) {
-				throw new Exception("Column class '$className' not found");
+				require_once 'Core/Block/Exception.php';
+				throw new Core_Block_Exception("Column class '$className' not found");
 			}
 			
 			unset($element['type']);
@@ -149,6 +279,12 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		return $this;
 	}
 	
+	/**
+	 * Delete specified column
+	 * 
+	 * @param unknown_type $name
+	 * @return Core_Block_Grid_Widget
+	 */
 	public function delColumn($name)
 	{
 		$this->_columns[$name] = null;
@@ -156,27 +292,51 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		return $this;
 	}
 	
+	/**
+	 * Set grid source data
+	 * 
+	 * @param  array|Iterator $data
+	 * @throws Core_Block_Exception If data has invalid type
+	 * @return Core_Block_Grid_Widget
+	 */
 	public function setData($data)
 	{
 		if (!is_array($data) && !($data instanceof Iterator)) {
-			throw new Exception("Rows data must be instance of Iterator or an array");
+			require_once 'Core/Block/Exception.php';
+			throw new Core_Block_Exception("Rows data must be instance of Iterator or an array");
 		}
 		
 		$this->_data = $data;
 		return $this;
 	}
 	
+	/**
+	 * Get all grid data
+	 * 
+	 * @return array|Iterator
+	 */
 	public function getData()
 	{
 		return $this->_data;
 	}
 	
+	/**
+	 * Set route options
+	 * 
+	 * @param  array $options
+	 * @return Core_Block_Grid_Widget
+	 */
 	public function setRouteOptions(array $options)
 	{
 		$this->_routeOptions = $options;
 		return $this;
 	}
 	
+	/**
+	 * Get (setup default) route options
+	 * 
+	 * @return array
+	 */
 	public function getRouteOptions()
 	{
 		if (null === $this->_routeOptions) {
@@ -190,17 +350,33 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		return $this->_routeOptions;
 	}
 	
+	/**
+	 * Set used route name
+	 * 
+	 * @param  string $name
+	 * @return Core_Block_Grid_Widget
+	 */
 	public function setRouteName($name)
 	{
 		$this->_routeName = $name;
 		return $this;
 	}
 	
+	/**
+	 * Get used route name
+	 * 
+	 * @return string
+	 */
 	public function getRouteName()
 	{
 		return $this->_routeName;
 	}
 	
+	/**
+	 * Load filters data from request
+	 * 
+	 * @return array
+	 */
 	public function getFilterValues()
 	{
 		$filterValues = array();
@@ -219,6 +395,11 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		return $filterValues;
 	}
 	
+	/**
+	 * Render <col> tag html
+	 * 
+	 * @return string
+	 */
 	protected function _renderColAttribs()
 	{
 		$xhtml = '';
@@ -230,6 +411,11 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		return $xhtml;
 	}
 	
+	/**
+	 * Render table header tag
+	 * 
+	 * @return string
+	 */
 	protected function _renderThead()
 	{
 		$request = Zend_Controller_Front::getInstance()->getRequest();
@@ -365,6 +551,11 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		return '<thead>' . $xhtml . '</thead>';
 	}
 	
+	/**
+	 * Rendet table body rows
+	 * 
+	 * @return string
+	 */
 	protected function _renderTbody()
 	{
 		$xhtml = '';
@@ -403,11 +594,23 @@ class Core_Block_Grid_Widget extends Core_Block_View
 		return '<tbody>' . PHP_EOL . $xhtml . PHP_EOL . '</tbody>';
 	}
 	
+	/**
+	 * Render table footer tag (currently not used)
+	 * 
+	 * @return string
+	 */
 	protected function _renderTfoot()
 	{
 		return '';
 	}
 	
+	/**
+	 * Render entrie grid html
+	 * 
+	 * (non-PHPdoc)
+	 * @see Core_Block_View::render()
+	 * @param string $name script name for render (use  BLOCK_DUMMY for prevent errors)
+	 */
 	public function render($name)
 	{
 		$class = preg_replace('/[^\p{L}\-]/u', '_', $this->getBlockName());

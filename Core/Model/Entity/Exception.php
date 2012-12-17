@@ -14,7 +14,7 @@
  *
  * @category   Core
  * @package    Core_Model
- * @subpackage Core_Model_Mapper
+ * @subpackage Core_Model_Entity
  * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  * @version    $Id: Exception.php 24218 2011-07-10 01:22:58Z ramon $
@@ -26,12 +26,12 @@
 require_once "Core/Model/Exception.php";
 
 /**
- * Mapper exception class
+ * Entity exception class
  *
  * @category   Core
  * @package    Core_Model
- * @subpackage Core_Model_Mapper
+ * @subpackage Core_Model_Entity
  * @copyright  Copyright (c) 2005-2012 SunNY Creative Technologies. (http://www.sunny.net.ua)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Core_Model_Mapper_Exception extends Core_Model_Exception {}
+class Core_Model_Entity_Exception extends Core_Model_Exception {}
