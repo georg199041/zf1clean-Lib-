@@ -140,14 +140,17 @@ class Core_Controller_Plugin_Acl extends Zend_Controller_Plugin_Abstract
 	/**
 	 * Set excluded resources params
 	 * Example list item:
+	 * 
 	 * <code>
-	 * $item = array(
-	 *     'module'     => '<module_name>',
-	 *     'controller' => '<controller_name>',
-	 *     'action'     => '<action_name>'
-	 * );
-	 * //OR
-	 * $item = '<module_name>/<controller_name>/<action_name>';
+	 * $plugin = new Core_Controller_Plugin_Acl();
+	 * $plugin->setExcludedResources(array(
+	 *     'module_name/controller_name/action_name', // String item representation
+	 *     array( // Array item representation
+	 *         'module'     => 'module_name',
+	 *         'controller' =>'controller_name',
+	 *         'action'     => 'action_name'
+	 *     )
+	 * ));
 	 * </code>
 	 * 
 	 * @param  array $options
