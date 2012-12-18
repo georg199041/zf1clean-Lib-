@@ -25,6 +25,11 @@
 require_once "Zend/View/Interface.php";
 
 /**
+ * @see Zend_Registry
+ */
+require_once 'Zend/Registry.php';
+
+/**
  * @see Core_Attributes
  */
 require_once "Core/Attributes.php";
@@ -341,17 +346,25 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
 	 * 
 	 * Internaly use Zend_Translate
 	 * 
-	 * Usage anywhere in block class or in template:
-	 * <php>
-	 *     $this->__('Untranslated string');
-	 * </php>
+	 * <code>
+	 * //You can use this method anywhere in extended block class or in template file
+	 * echo $this->__('Untranslated string');
 	 * 
-	 * @see Zend_Translate
-	 * @param  string $string Input string in default language
+	 * // Or with specified locale
+	 * echo $this->__('Untranslated string', 'ru');
+	 * </code>
+	 * 
+	 * @see Core_Translate_Manager
+	 * @param  string             $string Input string in default language
+	 * @param  string|Zend_Locale $locale Specified locale for translation
 	 * @return string Translated into selected language string
 	 */
-	public function __($string)
+	public function __($string, $locale = null)
 	{
+		if (Zend_Registry::isRegistered('Zend_Translate')) {
+			return Zend_Registry::get('Zend_Translate')->translate($string, $locale);
+		}
+		
 		return $string;
 	}
 	
