@@ -887,13 +887,13 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
     
     /**
      * Get property
-     * Currently not used
+     * Proxied to engine property named by $key
      * 
      * @param mixed $key
      */
     public function __get($key)
     {
-    	return $this->getEngine()->__get($key);
+    	return $this->getEngine()->$key;
     }
 
     /**
@@ -1064,4 +1064,14 @@ class Core_Block_View extends Core_Attributes implements Zend_View_Interface
      */
     public function toArray()
     {}
+    
+    /**
+     * Get engine vars
+     * 
+     * @return array
+     */
+    public function getVars()
+    {
+    	return $this->getEngine()->getVars();
+    }
 }

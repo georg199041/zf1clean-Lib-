@@ -92,7 +92,7 @@ class Core_Block_Application_Resource_Block
 			$options = $this->getBootstrap()->getOption('resources');
 			$options = (array) $options['view'];
 			
-			$logger = new Zend_Log(new Zend_Log_Writer_Firebug());
+			//$logger = new Zend_Log(new Zend_Log_Writer_Firebug());
 			$this->_block = new Core_Block_View(array_merge_recursive(array('blocks' => $this->getOptions(), 'logger' => $logger), $options));
 		}
 		
